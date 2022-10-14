@@ -33,6 +33,7 @@ def to_player_entity(player_json):
                     status=player_json["status"],
                     hashtag=player_json["hashtag"],
                     stats_id=player_json["stats_id"],
+                    dk_id=player_json["stats_id"],
                     swish_id=player_json["swish_id"],
                     yahoo_id=player_json["yahoo_id"],
                     rotowire_id=player_json["rotowire_id"],

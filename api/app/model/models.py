@@ -1,7 +1,7 @@
+from datetime import datetime
 import enum
 from dataclasses import dataclass
 from flask_sqlalchemy import SQLAlchemy
-from dataclasses import dataclass
 
 db = SQLAlchemy()
 
@@ -65,48 +65,91 @@ class TeamEntity(db.Model):
     fo_abbr = db.Column(db.String, nullable=False)
 
 
+# draft_group_game_relational_table = db.Table(
+#     "draft_group_game",
+#     db.Column("draft_group_id", db.ForeignKey("draft_group.id")),
+#     db.Column("game_id", db.ForeignKey("game.id")),
+#     db.UniqueConstraint("draft_group_id", "game_id"),
+# )
+
+# draft_group_player_relational_table = db.Table(
+# "draft_group_player",
+# db.Column("draft_group_id", db.ForeignKey("draft_group.id")),
+# db.Column("player_id", db.ForeignKey("player.id")),
+# db.UniqueConstraint("draft_group_id", "player_id"),
+# )
+
+
 @dataclass
-class Slate(db.Model):
+class Game(db.Model):
     id: int
+    home: int
+    away: int
+    draft_group_id: int
+    # start: datetime
+
+    __tablename__ = "game"
     id = db.Column(db.Integer, primary_key=True)
+    home = db.Column(db.Integer, db.ForeignKey("team.id"))
+    away = db.Column(db.Integer, db.ForeignKey("team.id"))
+    draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
+    # start = db.Column(db.DateTime, nullable=False)
 
 
 @dataclass
-class SlatePlayerDetails(db.Model):
+class DraftGroup(db.Model):
+    id: int
+    # start: datetime
+
+    __tablename__ = "draft_group"
+    id = db.Column(db.Integer, primary_key=True)
+    # start = db.Column(db.DateTime, nullable=False)
+    # games = db.relationship("Game", secondary=draft_group_game_relational_table)
+    # players = db.relationship(
+    # "DraftGroupPlayer", secondary=draft_group_player_relational_table
+    # )
+
+
+@dataclass
+class DraftGroupPlayer(db.Model):
     """
     Player for a given DFS slate, with matchup, salary, and projection data.
     """
 
     id: int
     salary: int
-    opp: str
-    site: str
+    roster_slot_id: int
+    # opp: str
+    player_id: int
+    draft_group_id: int
 
-    rts_median_projection: float
-    ows_median_projection: float
-    etr_median_projection: float
-    aggr_median_projection: float
+    # rts_median_projection: float
+    # ows_median_projection: float
+    # etr_median_projection: float
+    # aggr_median_projection: float
 
-    rts_ceiling_projection: float
-    ows_ceiling_projection: float
-    etr_ceiling_projection: float
-    aggr_ceiling_projection: float
+    # rts_ceiling_projection: float
+    # ows_ceiling_projection: float
+    # etr_ceiling_projection: float
+    # aggr_ceiling_projection: float
 
-    __tablename__ = "slate_player"
+    __tablename__ = "draft_group_player"
     id = db.Column(db.Integer, primary_key=True)
     salary = db.Column(db.Integer, nullable=False)
-    opp = db.Column(db.String, nullable=False)
-    site = db.Column(db.String, nullable=False)
+    roster_slot_id = db.Column(db.Integer, nullable=False)
+    # opp = db.Column(db.String, nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey("player.stats_id"))
+    draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
 
-    rts_median_projection = db.Column(db.Float, nullable=False)
-    ows_median_projection = db.Column(db.Float, nullable=False)
-    etr_median_projection = db.Column(db.Float, nullable=False)
-    aggr_median_projection = db.Column(db.Float, nullable=False)
+    # rts_median_projection = db.Column(db.Float, nullable=False)
+    # ows_median_projection = db.Column(db.Float, nullable=False)
+    # etr_median_projection = db.Column(db.Float, nullable=False)
+    # aggr_median_projection = db.Column(db.Float, nullable=False)
 
-    rts_ceiling_projection = db.Column(db.Float, nullable=False)
-    ows_ceiling_projection = db.Column(db.Float, nullable=False)
-    etr_ceiling_projection = db.Column(db.Float, nullable=False)
-    aggr_ceiling_projection = db.Column(db.Float, nullable=False)
+    # rts_ceiling_projection = db.Column(db.Float, nullable=False)
+    # ows_ceiling_projection = db.Column(db.Float, nullable=False)
+    # etr_ceiling_projection = db.Column(db.Float, nullable=False)
+    # aggr_ceiling_projection = db.Column(db.Float, nullable=False)
 
 
 @dataclass
@@ -121,6 +164,7 @@ class PlayerEntity(db.Model):
     hashtag: str
 
     stats_id: int
+    dk_id: int
     swish_id: int
     yahoo_id: int
     rotowire_id: int
@@ -145,6 +189,7 @@ class PlayerEntity(db.Model):
     sleeper_id = db.Column(db.String, nullable=False)
     sportradar_id = db.Column(db.String, nullable=True)
     stats_id = db.Column(db.Integer, nullable=True)
+    dk_id = db.Column(db.Integer, nullable=True)
     swish_id = db.Column(db.Integer, nullable=True)
     yahoo_id = db.Column(db.Integer, nullable=True)
     rotowire_id = db.Column(db.Integer, nullable=True)

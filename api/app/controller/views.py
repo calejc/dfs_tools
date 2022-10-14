@@ -1,6 +1,7 @@
 from flask import jsonify, request
 from app.service.db_service import *
 from app.service.team_service import *
+from app.service.draftkings_service import *
 from app import app
 
 
@@ -24,3 +25,9 @@ def players_post():
 @app.route("/upload", methods=["POST"])
 def upload_projections():
     pass
+
+
+@app.route("/fetch-draft-groups")
+def fetch_new_draft_groups():
+    extractMainSlate()
+    return {}
