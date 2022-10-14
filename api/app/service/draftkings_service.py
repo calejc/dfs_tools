@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import requests
 from app.model.models import *
 from app import app
