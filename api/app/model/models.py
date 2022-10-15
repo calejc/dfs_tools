@@ -130,10 +130,10 @@ class PlayerEntity(db.Model):
 @dataclass
 class Game(db.Model):
     id: int
-    home: int
-    away: int
     draft_group_id: int
     start: datetime
+    home_team: TeamEntity
+    away_team: TeamEntity
 
     __tablename__ = "game"
     id = db.Column(db.Integer, primary_key=True)
@@ -141,6 +141,8 @@ class Game(db.Model):
     away = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
     start = db.Column(db.DateTime, nullable=False)
+    home_team = db.relationship("TeamEntity", foreign_keys="Game.home")
+    away_team = db.relationship("TeamEntity", foreign_keys="Game.away")
 
 
 @dataclass
@@ -148,18 +150,19 @@ class DraftGroupPlayer(db.Model):
     id: int
     salary: int
     roster_slot_id: int
-    player_id: int
     team_id: int
     game_id: int
+    player: PlayerEntity
 
     __tablename__ = "draft_group_player"
     id = db.Column(db.Integer, primary_key=True)
     salary = db.Column(db.Integer, nullable=False)
     roster_slot_id = db.Column(db.Integer, nullable=False)
-    player_id = db.Column(db.Integer, db.ForeignKey("player.stats_id"))
+    player_id = db.Column(db.Integer, db.ForeignKey("player.dk_id"))
     team_id = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
     game_id = db.Column(db.Integer, db.ForeignKey("game.id"))
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
+    player = db.relationship("PlayerEntity")
 
 
 @dataclass

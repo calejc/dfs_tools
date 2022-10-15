@@ -47,6 +47,13 @@ def to_draft_group_player(json, dg_id):
     )
 
 
+def draftable_to_player_entity():
+    """
+    TODO: Insert new player entity when fetching draftgroup player pool, if player entity doesn't exist
+    """
+    pass
+
+
 def extractMainSlate():
     mainSlate = [
         draftGroup
