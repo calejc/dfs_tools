@@ -31,3 +31,8 @@ def upload_projections():
 def fetch_new_draft_groups():
     extractMainSlate()
     return {}
+
+
+@app.route('/upcoming-draft-groups')
+def get_upcoming_draft_groups():
+  return jsonify(get_draft_groups())
