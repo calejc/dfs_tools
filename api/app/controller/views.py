@@ -29,10 +29,10 @@ def upload_projections():
 
 @app.route("/fetch-draft-groups")
 def fetch_new_draft_groups():
-    extractMainSlate()
+    extract_slates()
     return {}
 
 
-@app.route('/upcoming-draft-groups')
+@app.route("/upcoming-draft-groups")
 def get_upcoming_draft_groups():
-  return jsonify(get_draft_groups())
+    return jsonify(get_draft_groups())

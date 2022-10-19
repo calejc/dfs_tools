@@ -7,19 +7,24 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-class Site(enum.Enum):
-    DRAFTKINGS = "DRAFTKINGS"
-    FANDUEL = "FANDUEL"
+class SlateType(str, enum.Enum):
+    SHOWDOWN = ("showdown",)
+    CLASSIC = "classic"
 
 
-class ProjectionSource(enum.Enum):
-    ONE_WEEK_SEASON = "ONE_WEEK_SEASON"
-    RUN_THE_SIMS = "RUN_THE_SIMS"
-    ESTABLISH_THE_RUN = "ESTABLISH_THE_RUN"
-    OTHER = "OTHER"
+class Site(str, enum.Enum):
+    DRAFTKINGS = "dk"
+    FANDUEL = "fd"
 
 
-class PlayerPosition(enum.Enum):
+class ProjectionSource(str, enum.Enum):
+    ONE_WEEK_SEASON = "ows"
+    RUN_THE_SIMS = "rts"
+    ESTABLISH_THE_RUN = "etr"
+    OTHER = "other"
+
+
+class PlayerPosition(str, enum.Enum):
     QB = "QB"
     RB = "RB"
     WR = "WR"
@@ -168,14 +173,16 @@ class DraftGroupPlayer(db.Model):
 @dataclass
 class DraftGroup(db.Model):
     id: int
-    # site: str
+    site: str
+    type: str
     start: datetime
     games: List[Game]
     players: List[DraftGroupPlayer]
 
     __tablename__ = "draft_group"
     id = db.Column(db.Integer, primary_key=True)
-    # site = db.Column(db.Enum(Site), nullable=False)
+    site = db.Column(db.Enum(Site), nullable=False)
+    type = db.Column(db.Enum(SlateType), nullable=False)
     start = db.Column(db.DateTime, nullable=False)
     games = db.relationship("Game")
     players = db.relationship("DraftGroupPlayer")
