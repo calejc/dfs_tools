@@ -2,6 +2,7 @@ from flask import jsonify, request
 from app.service.db_service import *
 from app.service.team_service import *
 from app.service.draftkings_service import *
+from app.service.stats_service import *
 from app import app
 
 
@@ -24,7 +25,8 @@ def players_post():
 
 @app.route("/upload", methods=["POST"])
 def upload_projections():
-    pass
+    do_thing_with_upload(request.files["file"])
+    return {}
 
 
 @app.route("/fetch-draft-groups")
