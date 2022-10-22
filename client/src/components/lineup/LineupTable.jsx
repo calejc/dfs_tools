@@ -1,12 +1,14 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
+import prettifyDollarValue from '../../util/prettifyDollarValue'
 
 export default function LineupTable() {
   const lineup = useSelector(state => state.lineup.value)
 
   const salaryLeft = () => {
-    return 50000 - lineup.reduce((accum, player) => accum + (player.value.salary | 0), 0)
+    const salRemaining = 50000 - lineup.reduce((accum, player) => accum + (player.value.salary | 0), 0)
+    return prettifyDollarValue(salRemaining.toString())
   }
 
   return (lineup.length > 0 && (

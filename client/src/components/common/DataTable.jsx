@@ -48,7 +48,7 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
       return isDesc() ?
         b[sort.by] - a[sort.by] :
         a[sort.by] - b[sort.by]
-    })
+    }).slice(0, 25)
   }
 
   const playersForPosition = () => {
