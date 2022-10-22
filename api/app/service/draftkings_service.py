@@ -5,6 +5,7 @@ from datetime import datetime
 
 NFL_CONTESTS_URL = "https://www.draftkings.com/lobby/getcontests?sport=NFL"
 DRAFTGROUPS_URL = "https://api.draftkings.com/draftgroups/v1/draftgroups/{}/draftables"
+SLEEPER_API_URL = 'https://api.sleeper.app/v1/players/nfl'
 
 DRAFTKINGS_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -62,7 +63,8 @@ def to_draft_group_player(json, dg_id):
 
 def draftable_to_player_entity():
     """
-    TODO: Insert new player entity when fetching draftgroup player pool, if player entity doesn't exist
+    TODO: Insert new player entity when fetching draftgroup player pool, if player entity doesn't exist.
+    Note: Query players json data for any position, most likely the player has a fantasy position that we skipped when initially persisting players
     """
     pass
 

@@ -4,6 +4,7 @@ import { Card, CardContent, Grid, Typography } from '@mui/material'
 import { selectDraftGroup } from '../../state/draftGroups'
 import toReadableDate from '../../util/toReadableDate'
 import '../../App.css'
+import { setLineupShell } from '../../state/lineup'
 
 export default function DraftGroupSelect() {
   const { draftGroups, selectedDraftGroup } = useSelector(state => state.draftGroups)
@@ -11,6 +12,7 @@ export default function DraftGroupSelect() {
 
   const onSelect = (id) => {
     dispatch(selectDraftGroup(id))
+    dispatch(setLineupShell(draftGroups.filter(dg => dg.id === id)[0].type))
   }
 
   const cardClassName = (id) => {

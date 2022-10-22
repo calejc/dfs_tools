@@ -8,7 +8,8 @@ export default function PlayerTable() {
 
   return (selectedDraftGroup && (
     <DataTable
-      columns={[DATA_TABLE_COLUMN.PlayerName, DATA_TABLE_COLUMN.Position, DATA_TABLE_COLUMN.Salary]}
+      defaultSort={DATA_TABLE_COLUMN.Salary}
+      columns={[DATA_TABLE_COLUMN.Position, DATA_TABLE_COLUMN.PlayerName, DATA_TABLE_COLUMN.Salary]}
       data={draftGroups.filter((x) => x.id === selectedDraftGroup)[0].players}
     />
   ))

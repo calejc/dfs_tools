@@ -13,7 +13,7 @@ export default function App() {
   }, [])
 
   return (
-    <Container sx={{ height: '100vh', width: '75vw', margin: 'auto' }}>
+    <Container sx={{ height: '100vh', width: '1400px', margin: 'auto' }}>
       <CreateLineup />
     </Container>
   )

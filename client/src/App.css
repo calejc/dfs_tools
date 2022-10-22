@@ -30,3 +30,13 @@
 .not-selected {
   opacity: 0.3;
 }
+
+.position-tabs-group {
+  min-height: 0px!important;
+}
+
+.position-tab {
+  padding: 6px 8px!important;
+  min-height: 0px!important;
+  min-width: 0px!important;
+}

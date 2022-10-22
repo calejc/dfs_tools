@@ -1,7 +1,7 @@
 from datetime import datetime
 import enum
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -155,9 +155,8 @@ class DraftGroupPlayer(db.Model):
     id: int
     salary: int
     roster_slot_id: int
-    team_id: int
     game_id: int
-    player: PlayerEntity
+    player: Union[PlayerEntity, TeamEntity]
 
     __tablename__ = "draft_group_player"
     id = db.Column(db.Integer, primary_key=True)
@@ -167,7 +166,12 @@ class DraftGroupPlayer(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
     game_id = db.Column(db.Integer, db.ForeignKey("game.id"))
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
-    player = db.relationship("PlayerEntity")
+    _player = db.relationship("PlayerEntity")
+    _team = db.relationship("TeamEntity")
+
+    @property
+    def player(self):
+        return self._player if self.player_id else self._team
 
 
 @dataclass

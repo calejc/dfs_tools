@@ -1,35 +1,32 @@
-import { ROSTER_SLOT_IDS } from "../../util/rosterSlotToPositionAbbr"
+import { ROSTER_SLOT_IDS } from "../../util/ROSTER_SLOT_IDS"
 
-const playerValueGetter = (params) => {
-  if (ROSTER_SLOT_IDS[params.row.roster_slot_id] === 'DST') {
-    // TODO: need to join Team entity on draftable response object, render Team Name here
-    return ''
+const playerValueGetter = (row) => {
+  if (ROSTER_SLOT_IDS[row.roster_slot_id] === 'DST') {
+    return row.player?.nickname || ''
   } else {
-    return params.row.player?.full_name || ''
+    return row.player?.full_name || ''
   }
 }
 
-
 const DATA_TABLE_COLUMN = {
   Position: {
-    field: 'roster_slot',
-    headerName: 'Position',
+    field: 'roster_slot_id',
+    label: 'Position',
     sortable: true,
-    flex: 1,
-    valueGetter: (params) => ROSTER_SLOT_IDS[params.row.roster_slot_id]
+    valueGetter: (row) => ROSTER_SLOT_IDS[row.roster_slot_id]
   },
   PlayerName: {
     field: 'name',
-    headerName: 'Player',
-    sortable: true,
+    label: 'Player',
+    sortable: false,
     flex: 1,
-    valueGetter: (params) => playerValueGetter(params)
+    valueGetter: (row) => playerValueGetter(row)
   },
   Salary: {
     field: 'salary',
-    headerName: 'Salary',
+    label: 'Salary',
     sortable: true,
-    flex: 1,
+    valueGetter: (row) => row.salary
   }
 }
 
