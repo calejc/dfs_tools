@@ -1,8 +1,21 @@
-import { Button, Grid, Icon, IconButton, Modal, Paper, Typography } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Modal,
+  Paper,
+  Select,
+  Typography
+} from '@mui/material'
+import React, { useState } from 'react'
+import { useSelector } from 'react-redux'
 import UploadIcon from '@mui/icons-material/Upload'
 import postFileUpload from '../../api/postFileUpload'
-
+import toReadableDate from '../../util/toReadableDate'
 
 const modalStyle = {
   position: 'absolute',
@@ -14,16 +27,17 @@ const modalStyle = {
 }
 
 export default function FileUploadModal({ open, onClose }) {
+  const { draftGroups } = useSelector(state => state.draftGroups)
   const [file, setFile] = useState()
+  const [source, setSource] = useState()
+  const [draftGroup, setDraftGroup] = useState()
+  const [error, setError] = useState()
 
   const onSubmit = () => {
-    console.log(file)
-    postFileUpload(file)
+    postFileUpload(file, source, draftGroup)
+      .then(() => onClose())
+      .catch((e) => setError(e))
   }
-
-  useEffect(() => {
-    console.log(file)
-  }, [file])
 
   return (
     <Modal
@@ -36,19 +50,54 @@ export default function FileUploadModal({ open, onClose }) {
           direction='row'
           justifyContent='flex-end'
           alignItems='center'
+          spacing={2}
         >
           <Grid item xs={12}>
             <Typography>Upload CSV Projections</Typography>
           </Grid>
+          <Grid item xs={6}>
+            <Box sx={{ minWidth: '120px' }}>
+              <FormControl fullWidth size='small'>
+                <InputLabel>Source</InputLabel>
+                <Select
+                  value={source}
+                  label='Source'
+                  onChange={(e) => setSource(e.target.value)}
+                >
+                  <MenuItem value={'etr'}>Establish The Run</MenuItem>
+                  <MenuItem value={'rts'}>Run The Sims</MenuItem>
+                  <MenuItem value={'ows'}>One Week Season</MenuItem>
+                  <MenuItem value={'other'}>Other</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Grid>
+          {draftGroups && (
+            <Grid item xs={6}>
+              <Box sx={{ minWidth: '120px' }}>
+                <FormControl fullWidth size='small'>
+                  <InputLabel>Slate</InputLabel>
+                  <Select
+                    value={draftGroup}
+                    label='Slate'
+                    onChange={(e) => setDraftGroup(e.target.value)}
+                  >
+                    {draftGroups.map(dg => {
+                      return <MenuItem value={dg.id}>{`${toReadableDate(dg.start)} (${dg.games.length} games)`}</MenuItem>
+                    })}
+                  </Select>
+                </FormControl>
+              </Box>
+            </Grid>
+          )}
           <Grid item>
             {file?.name}
             <Button
-              sx={{marginLeft: '10px'}}
+              sx={{ margin: '10px' }}
               variant='contained'
               color='info'
               component='label'
               htmlFor='file-upload'
-              onClick={onSubmit}
             >
               Select File
               <input
@@ -61,13 +110,18 @@ export default function FileUploadModal({ open, onClose }) {
           </Grid>
           <Grid item>
             <Button
-              disabled={!file}
+              disabled={!file || !source || !draftGroup}
               onClick={onSubmit}
               size='small'
             >
               <UploadIcon />
             </Button>
           </Grid>
+          {error && (
+            <Grid item xs={12}>
+              <Alert severity='error'>{error}</Alert>
+            </Grid>
+          )}
         </Grid>
       </Paper>
     </Modal>

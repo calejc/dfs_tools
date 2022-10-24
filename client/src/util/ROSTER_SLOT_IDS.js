@@ -4,5 +4,7 @@ export const ROSTER_SLOT_IDS = {
   68: 'WR',
   69: 'TE',
   70: 'FLEX',
-  71: 'DST'
+  71: 'DST',
+  511: 'CPT',
+  512: 'FLEX'
 }

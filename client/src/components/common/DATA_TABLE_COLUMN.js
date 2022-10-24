@@ -13,7 +13,10 @@ const DATA_TABLE_COLUMN = {
     field: 'roster_slot_id',
     label: 'Position',
     sortable: true,
-    valueGetter: (row) => ROSTER_SLOT_IDS[row.roster_slot_id]
+    valueGetter: (row) => {
+      console.log(row)
+      return ROSTER_SLOT_IDS[row.roster_slot_id]
+    }
   },
   PlayerName: {
     field: 'name',

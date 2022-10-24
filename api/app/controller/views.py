@@ -25,7 +25,7 @@ def players_post():
 
 @app.route("/upload", methods=["POST"])
 def upload_projections():
-    do_thing_with_upload(request.files["file"])
+    handle_file_upload(request.files["file"], request.args.get("source"))
     return {}
 
 

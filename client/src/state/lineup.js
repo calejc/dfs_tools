@@ -86,6 +86,11 @@ const lineupSlice = createSlice({
       if (positionSpecificSlots.length > 0) {
         positionSpecificSlots[0].value = player
       }
+    },
+    removePlayer(state, action) {
+      state.value.filter(x => {
+        return (parseInt(x.value?.id) === parseInt(action.payload))
+      })[0].value = {}
     }
   },
   extraReducers: {}
@@ -93,5 +98,6 @@ const lineupSlice = createSlice({
 
 export const setLineupShell = (draftGroupType) => lineupSlice.actions.setShell(draftGroupType)
 export const setLineupPlayer = (player) => lineupSlice.actions.setPlayer(player)
+export const removeLineupPlayer = (playerId) => lineupSlice.actions.removePlayer(playerId)
 
 export const lineupReducer = lineupSlice.reducer

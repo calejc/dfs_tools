@@ -110,4 +110,5 @@ def extract_slates():
 
 
 def get_draft_groups():
-    return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
+    return db.session.query(DraftGroup).all()
+    # return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()

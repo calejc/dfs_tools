@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import { Tabs, Tab, Table, TableContainer, TableHead, TableCell, TableRow, TableSortLabel, TableBody } from '@mui/material'
+import {
+  Tabs,
+  Tab,
+  Table,
+  TableContainer,
+  TableHead,
+  TableCell,
+  TableRow,
+  TableSortLabel,
+  TableBody,
+  TableFooter,
+  TablePagination
+} from '@mui/material'
 import '../../App.css'
 import { ROSTER_SLOT_IDS } from '../../util/ROSTER_SLOT_IDS'
 import { useDispatch } from 'react-redux'
@@ -22,13 +34,14 @@ const TAB_INDICES = {
 
 export default function DataTable({ columns, data, defaultSort, tabFilters = true }) {
   const dispatch = useDispatch()
+  const [paginationOptions, setPaginationOptions] = useState({ page: 0, rows: 15 })
   const [sort, setSort] = useState({ by: defaultSort.field, dir: SORT_DIR.DESCENDING })
   const [tab, setTab] = useState(0)
   const [tableData, setTableData] = useState([])
 
   useEffect(() => {
     setSortedAndFilteredTableData()
-  }, [tab, sort])
+  }, [tab, sort, paginationOptions, data])
 
   const onSort = (field) => {
     const sortDir = field === sort.by && isDesc() ? SORT_DIR.ASCENDING : SORT_DIR.DESCENDING
@@ -48,7 +61,7 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
       return isDesc() ?
         b[sort.by] - a[sort.by] :
         a[sort.by] - b[sort.by]
-    }).slice(0, 25)
+    })
   }
 
   const playersForPosition = () => {
@@ -61,6 +74,22 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
 
   const onPlayerSelect = (player) => {
     dispatch(setLineupPlayer(player))
+  }
+
+  const rowsForCurrPage = () => {
+    return tableData.slice(
+      paginationOptions.page * paginationOptions.rows,
+      paginationOptions.page * paginationOptions.rows + paginationOptions.rows
+    )
+  }
+
+  const onRowsPerPageChange = (e) => {
+    console.log(e.target.value)
+    setPaginationOptions({ page: 0, rows: e.target.value })
+  }
+
+  const onPageChange = (e, page) => {
+    setPaginationOptions({ ...paginationOptions, page: page })
   }
 
   return (
@@ -110,7 +139,7 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
           </TableRow>
         </TableHead>
         <TableBody>
-          {tableData.map(row => {
+          {rowsForCurrPage().map(row => {
             return (
               <TableRow
                 hover
@@ -129,6 +158,18 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
             )
           })}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TablePagination
+              rowsPerPageOptions={[15, 25, 50, 100]}
+              rowsPerPage={paginationOptions.rows}
+              count={data.length}
+              page={paginationOptions.page}
+              onPageChange={onPageChange}
+              onRowsPerPageChange={onRowsPerPageChange}
+            />
+          </TableRow>
+        </TableFooter>
       </Table>
     </TableContainer>
   )
