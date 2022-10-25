@@ -5,7 +5,7 @@ from datetime import datetime
 
 NFL_CONTESTS_URL = "https://www.draftkings.com/lobby/getcontests?sport=NFL"
 DRAFTGROUPS_URL = "https://api.draftkings.com/draftgroups/v1/draftgroups/{}/draftables"
-SLEEPER_API_URL = 'https://api.sleeper.app/v1/players/nfl'
+SLEEPER_API_URL = "https://api.sleeper.app/v1/players/nfl"
 
 DRAFTKINGS_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -110,5 +110,4 @@ def extract_slates():
 
 
 def get_draft_groups():
-    return db.session.query(DraftGroup).all()
-    # return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
+    return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()

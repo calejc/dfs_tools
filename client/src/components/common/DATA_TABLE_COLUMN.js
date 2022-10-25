@@ -1,7 +1,7 @@
-import { ROSTER_SLOT_IDS } from "../../util/ROSTER_SLOT_IDS"
+import { POSITIONS } from "../../state/lineup"
 
 const playerValueGetter = (row) => {
-  if (ROSTER_SLOT_IDS[row.roster_slot_id] === 'DST') {
+  if (POSITIONS[row.roster_slot_id].label === 'DST') {
     return row.player?.nickname || ''
   } else {
     return row.player?.full_name || ''
@@ -13,10 +13,7 @@ const DATA_TABLE_COLUMN = {
     field: 'roster_slot_id',
     label: 'Position',
     sortable: true,
-    valueGetter: (row) => {
-      console.log(row)
-      return ROSTER_SLOT_IDS[row.roster_slot_id]
-    }
+    valueGetter: (row) => POSITIONS[row.roster_slot_id].label
   },
   PlayerName: {
     field: 'name',

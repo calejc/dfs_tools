@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import {
   Tabs,
   Tab,
@@ -13,83 +13,74 @@ import {
   TablePagination
 } from '@mui/material'
 import '../../App.css'
-import { ROSTER_SLOT_IDS } from '../../util/ROSTER_SLOT_IDS'
 import { useDispatch } from 'react-redux'
-import { setLineupPlayer } from '../../state/lineup'
-
-const SORT_DIR = {
-  ASCENDING: 'asc',
-  DESCENDING: 'desc'
-}
-
-const TAB_INDICES = {
-  0: 'ALL',
-  1: 'QB',
-  2: 'RB',
-  3: 'WR',
-  4: 'TE',
-  5: 'FLEX',
-  6: 'DST'
-}
+import { POSITIONS, setLineupPlayer } from '../../state/lineup'
+import { ACTIONS, dataTableSortAndFilterReducer, DEFAULT_SORTING_AND_FILTERING_STATE, SORT_DIR } from './dataTableSortAndFilterReducer'
 
 export default function DataTable({ columns, data, defaultSort, tabFilters = true }) {
   const dispatch = useDispatch()
-  const [paginationOptions, setPaginationOptions] = useState({ page: 0, rows: 15 })
-  const [sort, setSort] = useState({ by: defaultSort.field, dir: SORT_DIR.DESCENDING })
-  const [tab, setTab] = useState(0)
+  const [sortingAndFiltering, sortingAndFilteringDispatch] = useReducer(dataTableSortAndFilterReducer, DEFAULT_SORTING_AND_FILTERING_STATE(defaultSort.field))
   const [tableData, setTableData] = useState([])
 
   useEffect(() => {
     setSortedAndFilteredTableData()
-  }, [tab, sort, paginationOptions, data])
+  }, [sortingAndFiltering])
+
+  useEffect(() => {
+    sortingAndFilteringDispatch({ type: ACTIONS.RESET, payload: defaultSort.field })
+  }, [data])
 
   const onSort = (field) => {
-    const sortDir = field === sort.by && isDesc() ? SORT_DIR.ASCENDING : SORT_DIR.DESCENDING
-    setSort({ by: field, dir: sortDir })
+    const sortDir = field === sortingAndFiltering.sortBy && isDesc() ? SORT_DIR.ASCENDING : SORT_DIR.DESCENDING
+    sortingAndFilteringDispatch({ type: ACTIONS.SORT, payload: { by: field, sortDir: sortDir } })
   }
 
   const onTabChange = (e, value) => {
-    setTab(value)
+    sortingAndFilteringDispatch({ type: ACTIONS.FILTER, payload: value })
   }
 
-  const isDesc = () => {
-    return sort.dir === SORT_DIR.DESCENDING
+  const onRowsPerPageChange = (e) => {
+    sortingAndFilteringDispatch({ type: ACTIONS.PER_PAGE, payload: { perPage: e.target.value, defaultSortBy: defaultSort.field } })
   }
 
-  const sorted = (filteredData) => {
-    return filteredData.slice().sort((a, b) => {
-      return isDesc() ?
-        b[sort.by] - a[sort.by] :
-        a[sort.by] - b[sort.by]
-    })
-  }
-
-  const playersForPosition = () => {
-    return data.filter(p => ROSTER_SLOT_IDS[p.roster_slot_id] === TAB_INDICES[tab])
-  }
-
-  const setSortedAndFilteredTableData = () => {
-    setTableData(TAB_INDICES[tab] === 'ALL' ? sorted(data) : sorted(playersForPosition()))
+  const onPageChange = (e, page) => {
+    sortingAndFilteringDispatch({ type: ACTIONS.PAGE, payload: page })
   }
 
   const onPlayerSelect = (player) => {
     dispatch(setLineupPlayer(player))
   }
 
+
+  const isDesc = () => {
+    return sortingAndFiltering.sortDir === SORT_DIR.DESCENDING
+  }
+
+  const sorted = (filteredData) => {
+    return filteredData.slice().sort((a, b) => {
+      return isDesc() ?
+        b[sortingAndFiltering.sortBy] - a[sortingAndFiltering.sortBy] :
+        a[sortingAndFiltering.sortBy] - b[sortingAndFiltering.sortBy]
+    })
+  }
+
+  const playersForPosition = () => {
+    return data.players.filter(p => parseInt(p.roster_slot_id) === parseInt(sortingAndFiltering.filter))
+  }
+
+  const setSortedAndFilteredTableData = () => {
+    setTableData(sortingAndFiltering.filter === 0 ? sorted(data.players) : sorted(playersForPosition()))
+  }
+
   const rowsForCurrPage = () => {
     return tableData.slice(
-      paginationOptions.page * paginationOptions.rows,
-      paginationOptions.page * paginationOptions.rows + paginationOptions.rows
+      sortingAndFiltering.page * sortingAndFiltering.perPage,
+      sortingAndFiltering.page * sortingAndFiltering.perPage + sortingAndFiltering.perPage
     )
   }
 
-  const onRowsPerPageChange = (e) => {
-    console.log(e.target.value)
-    setPaginationOptions({ page: 0, rows: e.target.value })
-  }
-
-  const onPageChange = (e, page) => {
-    setPaginationOptions({ ...paginationOptions, page: page })
+  const draftGroupPositionalTabs = () => {
+    return Object.keys(POSITIONS).filter(k => POSITIONS[k].draftGroupType === data.type)
   }
 
   return (
@@ -100,17 +91,14 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
             <TableRow>
               <TableCell colSpan={columns.length} padding='none'>
                 <Tabs
-                  value={tab}
+                  value={sortingAndFiltering.filter}
                   className='position-tabs-group'
                   onChange={onTabChange}
                 >
                   <Tab label='ALL' className='position-tab' />
-                  <Tab label='QB' className='position-tab' />
-                  <Tab label='RB' className='position-tab' />
-                  <Tab label='WR' className='position-tab' />
-                  <Tab label='TE' className='position-tab' />
-                  <Tab label='FLEX' className='position-tab' />
-                  <Tab label='DST' className='position-tab' />
+                  {draftGroupPositionalTabs().map(p => {
+                    return <Tab key={p} value={p} label={POSITIONS[p].label} className='position-tab' />
+                  })}
                 </Tabs>
               </TableCell>
             </TableRow>
@@ -119,13 +107,13 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
             {columns.map(col => (
               <TableCell
                 key={col.field}
-                sortDirection={(col.sortable && sort.by === col.field) ? sort.dir : false}
+                sortDirection={(col.sortable && sortingAndFiltering.sortBy === col.field) ? sortingAndFiltering.sortDir : false}
               >
                 {col.sortable ?
                   <TableSortLabel
-                    active={sort.by === col.field}
-                    className={sort.by === col.field ? 'active-sort data-table-header' : 'data-table-header'}
-                    direction={sort.by === col.field ? sort.dir : 'desc'}
+                    active={sortingAndFiltering.sortBy === col.field}
+                    className={sortingAndFiltering.sortBy === col.field ? 'active-sort data-table-header' : 'data-table-header'}
+                    direction={sortingAndFiltering.sortBy === col.field ? sortingAndFiltering.sortDir : 'desc'}
                     onClick={() => onSort(col.field)}
                   >
                     {col.label}
@@ -162,9 +150,9 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
           <TableRow>
             <TablePagination
               rowsPerPageOptions={[15, 25, 50, 100]}
-              rowsPerPage={paginationOptions.rows}
+              rowsPerPage={sortingAndFiltering.perPage}
               count={data.length}
-              page={paginationOptions.page}
+              page={sortingAndFiltering.page}
               onPageChange={onPageChange}
               onRowsPerPageChange={onRowsPerPageChange}
             />

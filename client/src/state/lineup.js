@@ -1,14 +1,14 @@
 import createInitialState from "./apiBased/createInitialState"
 import { createSlice } from "@reduxjs/toolkit"
 
-const POSITIONS = {
-  CPT: { //TODO: Get these roster_slot_ids
+export const POSITIONS = {
+  511: {
     label: 'CPT',
     draftGroupType: 'showdown',
     slots: 1,
     order: 1
   },
-  SHOWDOWN_FLEX: { //TODO: Get these roster_slot_ids
+  512: {
     label: 'FLEX',
     draftGroupType: 'showdown',
     slots: 5,
