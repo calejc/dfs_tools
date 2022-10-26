@@ -35,8 +35,17 @@ export default function FileUploadModal({ open, onClose }) {
 
   const onSubmit = () => {
     postFileUpload(file, source, draftGroup)
-      .then(() => onClose())
+      .then(() => closeModal())
       .catch((e) => setError(e))
+  }
+
+  const closeModal = () => {
+    setTimeout(() => {
+      setFile(undefined)
+      setSource(undefined)
+      setDraftGroup(undefined)
+      onClose()
+    }, 500)
   }
 
   return (
@@ -67,6 +76,7 @@ export default function FileUploadModal({ open, onClose }) {
                   <MenuItem value={'etr'}>Establish The Run</MenuItem>
                   <MenuItem value={'rts'}>Run The Sims</MenuItem>
                   <MenuItem value={'ows'}>One Week Season</MenuItem>
+                  <MenuItem value={'dr'}>Daily Roto</MenuItem>
                   <MenuItem value={'other'}>Other</MenuItem>
                 </Select>
               </FormControl>

@@ -21,6 +21,7 @@ class ProjectionSource(str, enum.Enum):
     ONE_WEEK_SEASON = "ows"
     RUN_THE_SIMS = "rts"
     ESTABLISH_THE_RUN = "etr"
+    DAILY_ROTO = "dr"
     OTHER = "other"
 
 
@@ -32,12 +33,18 @@ class PlayerPosition(str, enum.Enum):
     DEF = "DST"
 
 
+draft_group_player_projection_relational_table = db.Table(
+    "draft_group_player_projection",
+    db.Column("draft_group_player_id", db.ForeignKey("draft_group_player.id")),
+    db.Column("projection_id", db.ForeignKey("projection.id")),
+    db.UniqueConstraint("draft_group_player_id", "projection_id"),
+)
+
+
+@dataclass
 class Projection(db.Model):
     __tablename__ = "projection"
     id: int = db.Column(db.Integer, primary_key=True)
-    draft_group_player_id = db.Column(
-        db.Integer, db.ForeignKey("draft_group_player.id")
-    )
 
     source: str = db.Column(db.Enum(ProjectionSource), nullable=False)
     base: float = db.Column(db.Float)
@@ -131,7 +138,9 @@ class DraftGroupPlayer(db.Model):
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
     _player = db.relationship("PlayerEntity")
     _team = db.relationship("TeamEntity")
-    projections: List[Projection] = db.relationship('Projection')
+    projections: List[Projection] = db.relationship(
+        "Projection", secondary=draft_group_player_projection_relational_table
+    )
 
     @property
     def player(self):
