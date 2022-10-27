@@ -58,6 +58,27 @@ class Projection(db.Model):
     optimal: float = db.Column(db.Float)
     ownership: float = db.Column(db.Float)
 
+    # RTS Showdown-specific
+    cpt_rate: float = db.Column(db.Float)
+    flex_rate: float = db.Column(db.Float)
+
+
+@dataclass
+class ProjectionModel:
+    id: int
+
+    source: str
+    base: float
+    median: float
+    ceiling: float
+
+    value: float
+    etr_value: float
+
+    boom: float
+    optimal: float
+    ownership: float
+
 
 @dataclass
 class TeamEntity(db.Model):
@@ -145,6 +166,10 @@ class DraftGroupPlayer(db.Model):
     @property
     def player(self):
         return self._player if self.player_id else self._team
+
+    @property
+    def aggr_projections(self) -> List[ProjectionModel]:
+        return []
 
 
 @dataclass
