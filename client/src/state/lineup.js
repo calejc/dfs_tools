@@ -4,48 +4,56 @@ import { createSlice } from "@reduxjs/toolkit"
 export const POSITIONS = {
   511: {
     label: 'CPT',
+    rosterSlotId: 511,
     draftGroupType: 'showdown',
     slots: 1,
     order: 1
   },
   512: {
     label: 'FLEX',
+    rosterSlotId: 512,
     draftGroupType: 'showdown',
     slots: 5,
     order: 2
   },
   66: {
     label: 'QB',
+    rosterSlotId: 66,
     draftGroupType: 'classic',
     slots: 1,
     order: 1
   },
   67: {
     label: 'RB',
+    rosterSlotId: 67,
     draftGroupType: 'classic',
     slots: 2,
     order: 2
   },
   68: {
     label: 'WR',
+    rosterSlotId: 68,
     draftGroupType: 'classic',
     slots: 3,
     order: 3
   },
   69: {
     label: 'TE',
+    rosterSlotId: 69,
     draftGroupType: 'classic',
     slots: 1,
     order: 4
   },
   70: {
     label: 'FLEX',
+    rosterSlotId: 70,
     draftGroupType: 'classic',
     slots: 1,
     order: 5
   },
   71: {
     label: 'DST',
+    rosterSlotId: 71,
     draftGroupType: 'classic',
     slots: 1,
     order: 6

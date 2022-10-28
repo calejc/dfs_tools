@@ -50,9 +50,9 @@ class Columns:
     def get_rate_value(self, row, key):
         value = row.get(key, None)
         if "%" in value:
-            return float(value.split("%")[0]) / 100
+            return float(value.split("%")[0])
         else:
-            return float(value)
+            return float(value) * 100
 
     def extract_value(self, row, key):
         try:
@@ -143,9 +143,9 @@ class RunTheSimsColumns(Columns):
             ],
         )
         if "%" in ownership:
-            return float(ownership.split("%")[0]) / 100
+            return float(ownership.split("%")[0])
         else:
-            return float(ownership)
+            return float(ownership) * 100
 
     def get_base(self, row):
         return self.get_populated_value(
@@ -165,7 +165,6 @@ class RunTheSimsColumns(Columns):
         )
 
     def get_player(self, row):
-        # print(row)
         return self.get_populated_value(
             [row.get(self.player, None), row.get("player", None)]
         )

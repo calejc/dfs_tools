@@ -4,6 +4,7 @@ export const SORT_DIR = {
 }
 
 export const ACTIONS = {
+  QUERY: "QUERY",
   FILTER: "FILTER",
   SORT: "SORT",
   PAGE: "PAGE",
@@ -11,18 +12,28 @@ export const ACTIONS = {
   RESET: "RESET"
 }
 
+const DEFAULT_PAGE = 0
+const DEFAULT_PER_PAGE = 20
+const DEFAULT_QUERY = ''
+
 export function DEFAULT_SORTING_AND_FILTERING_STATE(defaultSortBy) {
   return {
+    query: DEFAULT_QUERY,
     filter: 0,
     sortBy: defaultSortBy,
     sortDir: SORT_DIR.DESCENDING,
-    page: 0,
-    perPage: 15
+    page: DEFAULT_PAGE,
+    perPage: DEFAULT_PER_PAGE
   }
 }
 
 export const dataTableSortAndFilterReducer = (state, action) => {
   switch (action.type) {
+    case ACTIONS.QUERY:
+      return {
+        ...state,
+        query: action.payload.toUpperCase()
+      }
     case ACTIONS.FILTER:
       return {
         ...state,
@@ -42,8 +53,8 @@ export const dataTableSortAndFilterReducer = (state, action) => {
     case ACTIONS.PER_PAGE:
       return {
         ...state,
-        perPage: action.payload,
-        page: DEFAULT_SORTING_AND_FILTERING_STATE(action.payload.defaultSortBy).page
+        perPage: action.payload.perPage,
+        page: DEFAULT_PAGE
       }
     case ACTIONS.RESET:
       return DEFAULT_SORTING_AND_FILTERING_STATE(action.payload)

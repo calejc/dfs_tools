@@ -65,9 +65,6 @@ class Projection(db.Model):
 
 @dataclass
 class ProjectionModel:
-    id: int
-
-    source: str
     base: float
     median: float
     ceiling: float
@@ -78,6 +75,9 @@ class ProjectionModel:
     boom: float
     optimal: float
     ownership: float
+
+    cpt_rate: float
+    flex_rate: float
 
 
 @dataclass
@@ -149,6 +149,14 @@ class Game(db.Model):
 @dataclass
 class DraftGroupPlayer(db.Model):
     __tablename__ = "draft_group_player"
+    ceiling: float
+    base: float
+    median: float
+    value: float
+    etr_value: float
+    ownership: float
+    boom: float
+    optimal: float
     player: Union[PlayerEntity, TeamEntity]
     id: int = db.Column(db.Integer, primary_key=True)
     salary: int = db.Column(db.Integer, nullable=False)
@@ -159,7 +167,7 @@ class DraftGroupPlayer(db.Model):
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
     _player = db.relationship("PlayerEntity")
     _team = db.relationship("TeamEntity")
-    projections: List[Projection] = db.relationship(
+    projections = db.relationship(
         "Projection", secondary=draft_group_player_projection_relational_table
     )
 
@@ -167,9 +175,114 @@ class DraftGroupPlayer(db.Model):
     def player(self):
         return self._player if self.player_id else self._team
 
-    @property
-    def aggr_projections(self) -> List[ProjectionModel]:
-        return []
+    # TODO: Can I abstract these out somehow? Dynamically generate these column_properties? Any shared logic here?
+    base = db.column_property(
+        db.select(db.func.round(db.func.avg(Projection.base).label("base"), 2))
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    ceiling = db.column_property(
+        db.select(db.func.round(db.func.avg(Projection.ceiling).label("ceiling"), 2))
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    median = db.column_property(
+        db.select(db.func.round(db.func.avg(Projection.median).label("median"), 2))
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    value = db.column_property(
+        db.select(db.func.round(db.func.avg(Projection.value).label("value"), 2))
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    etr_value = db.column_property(
+        db.select(
+            db.func.round(db.func.avg(Projection.etr_value).label("etr_value"), 2)
+        )
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    ownership = db.column_property(
+        db.select(
+            db.func.round(db.func.avg(Projection.ownership).label("ownership"), 3)
+        )
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    boom = db.column_property(
+        db.select(db.func.round(db.func.avg(Projection.boom).label("boom"), 3))
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
+
+    optimal = db.column_property(
+        db.select(db.func.round(db.func.avg(Projection.optimal).label("optimal"), 3))
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
 
 
 @dataclass

@@ -93,7 +93,7 @@ export default function FileUploadModal({ open, onClose }) {
                     onChange={(e) => setDraftGroup(e.target.value)}
                   >
                     {draftGroups.map(dg => {
-                      return <MenuItem value={dg.id}>{`${toReadableDate(dg.start)} (${dg.games.length} games)`}</MenuItem>
+                      return <MenuItem key={dg.id} value={dg.id}>{`${toReadableDate(dg.start)} (${dg.games.length} games)`}</MenuItem>
                     })}
                   </Select>
                 </FormControl>

@@ -37,25 +37,23 @@ export default function DraftGroupSelect() {
       alignItems='center'
     >
       {draftGroups.map((dg) => {
-        return <>
-          <Grid
-            item
-            key={dg.id}
-            sx={{ cursor: 'pointer' }}
-            onClick={() => onSelect(dg.id)}
+        return <Grid
+          item
+          key={dg.id}
+          sx={{ cursor: 'pointer' }}
+          onClick={() => onSelect(dg.id)}
+        >
+          <Card
+            sx={{ border: '1px solid black' }}
+            className={cardClassName(dg.id)}
           >
-            <Card
-              sx={{ border: '1px solid black' }}
-              className={cardClassName(dg.id)}
-            >
-              <CardContent>
-                <Typography>{dg.type.toUpperCase()}</Typography>
-                <Typography>{toReadableDate(dg.start)}</Typography>
-                <Typography color="text.secondary">{dg.games.length}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </>
+            <CardContent>
+              <Typography>{dg.type.toUpperCase()}</Typography>
+              <Typography>{toReadableDate(dg.start)}</Typography>
+              <Typography color="text.secondary">{dg.games.length}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
       })}
     </Grid>
   ))

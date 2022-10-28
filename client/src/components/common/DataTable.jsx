@@ -10,12 +10,14 @@ import {
   TableSortLabel,
   TableBody,
   TableFooter,
-  TablePagination
+  TablePagination,
+  TextField
 } from '@mui/material'
 import '../../App.css'
 import { useDispatch } from 'react-redux'
 import { POSITIONS, setLineupPlayer } from '../../state/lineup'
 import { ACTIONS, dataTableSortAndFilterReducer, DEFAULT_SORTING_AND_FILTERING_STATE, SORT_DIR } from './dataTableSortAndFilterReducer'
+import { playerValueGetter } from './DATA_TABLE_COLUMN'
 
 export default function DataTable({ columns, data, defaultSort, tabFilters = true }) {
   const dispatch = useDispatch()
@@ -39,6 +41,10 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
     sortingAndFilteringDispatch({ type: ACTIONS.FILTER, payload: value })
   }
 
+  const onSearch = (e) => {
+    sortingAndFilteringDispatch({ type: ACTIONS.QUERY, payload: e.target.value })
+  }
+
   const onRowsPerPageChange = (e) => {
     sortingAndFilteringDispatch({ type: ACTIONS.PER_PAGE, payload: { perPage: e.target.value, defaultSortBy: defaultSort.field } })
   }
@@ -50,7 +56,6 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
   const onPlayerSelect = (player) => {
     dispatch(setLineupPlayer(player))
   }
-
 
   const isDesc = () => {
     return sortingAndFiltering.sortDir === SORT_DIR.DESCENDING
@@ -64,12 +69,19 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
     })
   }
 
-  const playersForPosition = () => {
-    return data.players.filter(p => parseInt(p.roster_slot_id) === parseInt(sortingAndFiltering.filter))
+  const filteredPlayers = () => {
+    return data.players.filter(p => {
+      return (
+        sortingAndFiltering.filter === 0 ?
+          p.roster_slot_id !== 70 :
+          parseInt(sortingAndFiltering.filter) === parseInt(p.roster_slot_id)
+      ) &&
+        playerValueGetter(p).toUpperCase().includes(sortingAndFiltering.query)
+    })
   }
 
   const setSortedAndFilteredTableData = () => {
-    setTableData(sortingAndFiltering.filter === 0 ? sorted(data.players) : sorted(playersForPosition()))
+    setTableData(sorted(filteredPlayers()))
   }
 
   const rowsForCurrPage = () => {
@@ -87,9 +99,9 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
     <TableContainer sx={{ border: '1px solid rgba(224, 224, 224, 1)', borderRadius: '5px' }} >
       <Table size='small'>
         <TableHead>
-          {tabFilters && (
-            <TableRow>
-              <TableCell colSpan={columns.length} padding='none'>
+          <TableRow>
+            {tabFilters && (
+              <TableCell colSpan={columns.length - 3} padding='none'>
                 <Tabs
                   value={sortingAndFiltering.filter}
                   className='position-tabs-group'
@@ -101,13 +113,28 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
                   })}
                 </Tabs>
               </TableCell>
-            </TableRow>
-          )}
+            )}
+            <TableCell
+              colSpan={3}
+              padding='none'
+              align='right'
+            >
+              <TextField
+                hiddenLabel
+                placeholder='Search'
+                variant='standard'
+                size='small'
+                margin='none'
+                onChange={onSearch}
+              />
+            </TableCell>
+          </TableRow>
           <TableRow>
             {columns.map(col => (
               <TableCell
                 key={col.field}
                 sortDirection={(col.sortable && sortingAndFiltering.sortBy === col.field) ? sortingAndFiltering.sortDir : false}
+                sx={{ padding: '2px 6px!important' }}
               >
                 {col.sortable ?
                   <TableSortLabel
@@ -137,7 +164,10 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
               >
                 {columns.map(col => {
                   return (
-                    <TableCell>
+                    <TableCell
+                      key={col.label}
+                      sx={{ padding: '2px 6px!important' }}
+                    >
                       {col.valueGetter(row)}
                     </TableCell>
                   )
@@ -149,9 +179,9 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
         <TableFooter>
           <TableRow>
             <TablePagination
-              rowsPerPageOptions={[15, 25, 50, 100]}
+              rowsPerPageOptions={[20, 50, 100]}
               rowsPerPage={sortingAndFiltering.perPage}
-              count={data.length}
+              count={tableData.length}
               page={sortingAndFiltering.page}
               onPageChange={onPageChange}
               onRowsPerPageChange={onRowsPerPageChange}

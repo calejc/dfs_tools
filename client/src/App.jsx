@@ -16,7 +16,7 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <Container sx={{ height: '100vh', width: '1400px', margin: 'auto' }}>
+      <Container sx={{ height: '100vh', minWidth: '1400px', margin: 'auto' }}>
         <CreateLineup />
       </Container>
     </>
