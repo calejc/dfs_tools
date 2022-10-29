@@ -1,10 +1,10 @@
 import { POSITIONS } from "../../state/lineup"
 
 export const playerValueGetter = (row) => {
-  if (POSITIONS[row.roster_slot_id].label === 'DST') {
-    return row.player?.nickname || ''
+  if (POSITIONS[row?.roster_slot_id]?.label === 'DST') {
+    return row?.player?.nickname || ''
   } else {
-    return row.player?.full_name || ''
+    return row?.player?.full_name || ''
   }
 }
 

@@ -21,7 +21,7 @@ export default function DraftGroupSelect() {
     }
 
     if (selectedDraftGroup === id) {
-      return 'selected'
+      return ''
     } else {
       return 'not-selected'
     }

@@ -86,16 +86,36 @@ class Columns:
                 PlayerEntity.position == position,
             )
 
+    def get_team_id_subquery():
+        pass
+
     def get_draft_group_players(self, row, draft_group_id, db_session):
-        return (
-            db_session.query(DraftGroupPlayer)
-            .filter(
-                DraftGroupPlayer.draft_group_id == draft_group_id,
-                DraftGroupPlayer.player_id
-                == self.get_player_id_subquery(row, db_session),
+        if row.get(self.position, None) == "DST":
+            return (
+                db_session.query(DraftGroupPlayer).filter(
+                    DraftGroupPlayer.id == row.get(self.draft_group_player_id, None)
+                )
+                if self.draft_group_player_id
+                and row.get(self.draft_group_player_id, None)
+                else db_session.query(DraftGroupPlayer)
+                .filter(
+                    DraftGroupPlayer.draft_group_id == draft_group_id,
+                    DraftGroupPlayer.roster_slot_id == 71,
+                    DraftGroupPlayer.player_id
+                    == self.get_team_id_subquery(row, db_session),
+                )
+                .first()
             )
-            .all()
-        )
+        else:
+            return (
+                db_session.query(DraftGroupPlayer)
+                .filter(
+                    DraftGroupPlayer.draft_group_id == draft_group_id,
+                    DraftGroupPlayer.player_id
+                    == self.get_player_id_subquery(row, db_session),
+                )
+                .all()
+            )
 
 
 class EstablishTheRunColumns(Columns):

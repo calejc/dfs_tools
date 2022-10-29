@@ -14,6 +14,7 @@ import {
 import prettifyDollarValue from '../../util/prettifyDollarValue'
 import CloseIcon from '@mui/icons-material/Close'
 import { removeLineupPlayer } from '../../state/lineup'
+import { playerValueGetter } from '../common/DATA_TABLE_COLUMN'
 
 export default function LineupTable() {
   const [useCeiling, setUseCeiling] = useState(true)
@@ -28,12 +29,12 @@ export default function LineupTable() {
     setTotalLineupProjection(
       parseFloat(
         lineup.reduce((accum, player) => accum + (projectionValue(player.value) || 0), 0)
-      )
+      ).toFixed(2)
     )
     setTotalLineupOwnership(
       parseFloat(
         lineup.reduce((accum, player) => accum + (Number(player.value.ownership) || 0), 0)
-      )
+      ).toFixed(2)
     )
     const populatedValues = lineup.filter(p => p.value.ownership > 0)
     if (populatedValues.length > 0) {
@@ -43,7 +44,7 @@ export default function LineupTable() {
         ) * Number(`100${"0".repeat(populatedValues.length)}`)).toFixed(2)
       )
     }
-  }, [lineup])
+  }, [lineup, useCeiling])
 
   const totalSalaryLeft = () => {
     return 50000 - lineup.reduce((accum, player) => accum + (player.value.salary | 0), 0)
@@ -54,9 +55,10 @@ export default function LineupTable() {
   }
 
   const salaryPerPlayerRemaining = () => {
-    return prettifyDollarValue(
-      (totalSalaryLeft() / lineup.filter((roster_slot) => Object.keys(roster_slot.value).length === 0).length).toString().split('.')[0]
-    )
+    return lineup.find((roster_slot) => Object.keys(roster_slot.value).length === 0) ?
+      prettifyDollarValue(
+        (totalSalaryLeft() / lineup.filter((roster_slot) => Object.keys(roster_slot.value).length === 0).length).toString().split('.')[0]
+      ) : "$0"
   }
 
   const onRemove = (id) => {
@@ -116,7 +118,7 @@ export default function LineupTable() {
             return (
               <TableRow key={i}>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{row.label}</TableCell>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.player?.full_name}</TableCell>
+                <TableCell sx={{ padding: '2px 6px!important' }}>{playerValueGetter(row.value)}</TableCell>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{projectionValue(row.value)}</TableCell>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.ownership}</TableCell>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.salary}</TableCell>
@@ -140,7 +142,8 @@ export default function LineupTable() {
             <TableCell
               colSpan={2}
               sx={{ border: 'none!important', padding: '2px 6px!important' }}
-            >Rem. / Player: {salaryPerPlayerRemaining()}
+            >
+              Rem. / Player: {salaryPerPlayerRemaining()}
             </TableCell>
             <TableCell
               colSpan={1}
