@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux'
 import UploadIcon from '@mui/icons-material/Upload'
 import postFileUpload from '../../api/postFileUpload'
 import toReadableDate from '../../util/toReadableDate'
+import { PROJECTION_SOURCE } from '../../shared/CONSTANTS'
 
 const modalStyle = {
   position: 'absolute',
@@ -73,11 +74,14 @@ export default function FileUploadModal({ open, onClose }) {
                   label='Source'
                   onChange={(e) => setSource(e.target.value)}
                 >
-                  <MenuItem value={'etr'}>Establish The Run</MenuItem>
-                  <MenuItem value={'rts'}>Run The Sims</MenuItem>
-                  <MenuItem value={'ows'}>One Week Season</MenuItem>
-                  <MenuItem value={'dr'}>Daily Roto</MenuItem>
-                  <MenuItem value={'other'}>Other</MenuItem>
+                  {Object.keys(PROJECTION_SOURCE).map(source => {
+                    return <MenuItem
+                      key={source}
+                      value={source.toLowerCase()}
+                    >
+                      {PROJECTION_SOURCE[source]}
+                    </MenuItem>
+                  })}
                 </Select>
               </FormControl>
             </Box>
@@ -93,7 +97,12 @@ export default function FileUploadModal({ open, onClose }) {
                     onChange={(e) => setDraftGroup(e.target.value)}
                   >
                     {draftGroups.map(dg => {
-                      return <MenuItem key={dg.id} value={dg.id}>{`${toReadableDate(dg.start)} (${dg.games.length} games)`}</MenuItem>
+                      return <MenuItem
+                        key={dg.id}
+                        value={dg.id}
+                      >
+                        {`${toReadableDate(dg.start)} (${dg.games.length} games)`}
+                      </MenuItem>
                     })}
                   </Select>
                 </FormControl>

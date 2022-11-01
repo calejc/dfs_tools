@@ -5,6 +5,7 @@ import { selectDraftGroup } from '../../state/draftGroups'
 import toReadableDate from '../../util/toReadableDate'
 import '../../App.css'
 import { setLineupShell } from '../../state/lineup'
+import SubHeader from '../common/SubHeader'
 
 export default function DraftGroupSelect() {
   const { draftGroups, selectedDraftGroup } = useSelector(state => state.draftGroups)
@@ -25,6 +26,18 @@ export default function DraftGroupSelect() {
     } else {
       return 'not-selected'
     }
+  }
+
+  const draftGroupTypeDescriptor = (dg) => {
+    return dg.type.toUpperCase()
+  }
+
+  const draftGroupSuffixDescriptor = (dg) => {
+    return dg.suffix ? dg.suffix : 'Main'
+  }
+
+  const draftGroupGamesDescriptor = (dg) => {
+    return `${dg.games.length} ${dg.games.length > 1 ? 'games' : 'game'}`
   }
 
   return (draftGroups.length > 0 && (
@@ -48,9 +61,10 @@ export default function DraftGroupSelect() {
             className={cardClassName(dg.id)}
           >
             <CardContent>
-              <Typography>{dg.type.toUpperCase()}</Typography>
               <Typography>{toReadableDate(dg.start)}</Typography>
-              <Typography color="text.secondary">{dg.games.length}</Typography>
+              <SubHeader text={draftGroupTypeDescriptor(dg)} />
+              <SubHeader text={draftGroupSuffixDescriptor(dg)} />
+              <SubHeader text={draftGroupGamesDescriptor(dg)} />
             </CardContent>
           </Card>
         </Grid>

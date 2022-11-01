@@ -3,6 +3,7 @@ from app.service.db_service import *
 from app.service.team_service import *
 from app.service.draftkings_service import *
 from app.service.stats_service import *
+from app.service.optimize import *
 from app import app
 
 

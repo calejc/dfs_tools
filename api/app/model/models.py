@@ -25,12 +25,23 @@ class ProjectionSource(str, enum.Enum):
     OTHER = "other"
 
 
-class PlayerPosition(str, enum.Enum):
-    QB = "QB"
-    RB = "RB"
-    WR = "WR"
-    TE = "TE"
-    DEF = "DST"
+def avg_column_property(id, col, round):
+    return db.column_property(
+        db.select(
+            db.func.round(
+                db.func.avg(col).label("{}".format(str(col).split(".")[1])), round
+            )
+        )
+        .where(
+            db.and_(
+                draft_group_player_projection_relational_table.c.draft_group_player_id
+                == id,
+                draft_group_player_projection_relational_table.c.projection_id
+                == Projection.id,
+            )
+        )
+        .scalar_subquery()
+    )
 
 
 draft_group_player_projection_relational_table = db.Table(
@@ -38,6 +49,14 @@ draft_group_player_projection_relational_table = db.Table(
     db.Column("draft_group_player_id", db.ForeignKey("draft_group_player.id")),
     db.Column("projection_id", db.ForeignKey("projection.id")),
     db.UniqueConstraint("draft_group_player_id", "projection_id"),
+)
+
+
+draft_group_game_relational_table = db.Table(
+    "draft_group_game",
+    db.Column("draft_group_id", db.ForeignKey("draft_group.id")),
+    db.Column("game_id", db.ForeignKey("game.id")),
+    db.UniqueConstraint("draft_group_id", "game_id"),
 )
 
 
@@ -50,9 +69,7 @@ class Projection(db.Model):
     base: float = db.Column(db.Float)
     median: float = db.Column(db.Float)
     ceiling: float = db.Column(db.Float)
-
     value: float = db.Column(db.Float)
-    etr_value: float = db.Column(db.Float)
 
     boom: float = db.Column(db.Float)
     optimal: float = db.Column(db.Float)
@@ -61,23 +78,6 @@ class Projection(db.Model):
     # RTS Showdown-specific
     cpt_rate: float = db.Column(db.Float)
     flex_rate: float = db.Column(db.Float)
-
-
-@dataclass
-class ProjectionModel:
-    base: float
-    median: float
-    ceiling: float
-
-    value: float
-    etr_value: float
-
-    boom: float
-    optimal: float
-    ownership: float
-
-    cpt_rate: float
-    flex_rate: float
 
 
 @dataclass
@@ -140,7 +140,6 @@ class Game(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     home = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
     away = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
-    draft_group_id: int = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
     start: datetime = db.Column(db.DateTime, nullable=False)
     home_team: TeamEntity = db.relationship("TeamEntity", foreign_keys="Game.home")
     away_team: TeamEntity = db.relationship("TeamEntity", foreign_keys="Game.away")
@@ -153,14 +152,16 @@ class DraftGroupPlayer(db.Model):
     base: float
     median: float
     value: float
-    etr_value: float
     ownership: float
     boom: float
     optimal: float
+    cpt_rate: float
+    flex_rate: float
     player: Union[PlayerEntity, TeamEntity]
     id: int = db.Column(db.Integer, primary_key=True)
     salary: int = db.Column(db.Integer, nullable=False)
     roster_slot_id: int = db.Column(db.Integer, nullable=False)
+    flex_id: int = db.Column(db.Integer)
     game_id: int = db.Column(db.Integer, db.ForeignKey("game.id"))
     player_id = db.Column(db.Integer, db.ForeignKey("player.dk_id"))
     team_id = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
@@ -175,114 +176,19 @@ class DraftGroupPlayer(db.Model):
     def player(self):
         return self._player if self.player_id else self._team
 
-    # TODO: Can I abstract these out somehow? Dynamically generate these column_properties? Any shared logic here?
-    base = db.column_property(
-        db.select(db.func.round(db.func.avg(Projection.base).label("base"), 2))
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
+    base = avg_column_property(id, Projection.base, 2)
+    ceiling = avg_column_property(id, Projection.ceiling, 2)
+    median = avg_column_property(id, Projection.median, 2)
+    value = avg_column_property(id, Projection.value, 2)
+    ownership = avg_column_property(id, Projection.ownership, 3)
+    boom = avg_column_property(id, Projection.boom, 3)
+    optimal = avg_column_property(id, Projection.optimal, 3)
+    cpt_rate = avg_column_property(id, Projection.cpt_rate, 2)
+    flex_rate = avg_column_property(id, Projection.flex_rate, 2)
 
-    ceiling = db.column_property(
-        db.select(db.func.round(db.func.avg(Projection.ceiling).label("ceiling"), 2))
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
-
-    median = db.column_property(
-        db.select(db.func.round(db.func.avg(Projection.median).label("median"), 2))
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
-
-    value = db.column_property(
-        db.select(db.func.round(db.func.avg(Projection.value).label("value"), 2))
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
-
-    etr_value = db.column_property(
-        db.select(
-            db.func.round(db.func.avg(Projection.etr_value).label("etr_value"), 2)
-        )
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
-
-    ownership = db.column_property(
-        db.select(
-            db.func.round(db.func.avg(Projection.ownership).label("ownership"), 3)
-        )
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
-
-    boom = db.column_property(
-        db.select(db.func.round(db.func.avg(Projection.boom).label("boom"), 3))
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
-
-    optimal = db.column_property(
-        db.select(db.func.round(db.func.avg(Projection.optimal).label("optimal"), 3))
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
-        .scalar_subquery()
-    )
+    # opp = db.column_property(
+    #     db.select()
+    # )
 
 
 @dataclass
@@ -292,5 +198,8 @@ class DraftGroup(db.Model):
     site: str = db.Column(db.Enum(Site), nullable=False)
     type: str = db.Column(db.Enum(SlateType), nullable=False)
     start: datetime = db.Column(db.DateTime, nullable=False)
-    games: List[Game] = db.relationship("Game")
+    suffix: str = db.Column(db.String)
     players: List[DraftGroupPlayer] = db.relationship("DraftGroupPlayer")
+    games: List[Game] = db.relationship(
+        "Game", secondary=draft_group_game_relational_table
+    )

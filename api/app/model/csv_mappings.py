@@ -11,7 +11,6 @@ class Columns:
         median,
         ceiling,
         value,
-        etr_value,
         boom,
         optimal,
         ownership,
@@ -25,7 +24,6 @@ class Columns:
         self.median = median
         self.ceiling = ceiling
         self.value = value
-        self.etr_value = etr_value
         self.boom = boom
         self.optimal = optimal
         self.ownership = ownership
@@ -38,35 +36,42 @@ class Columns:
     def get_ownership(self, row):
         return row.get(self.ownership, None)
 
-    def get_ceiling(self, row):
-        return row.get(self.ceiling, None)
-
     def get_player(self, row):
         return row.get(self.player, None)
 
     def get_position(self, row):
         return row.get(self.position, None)
 
-    def get_rate_value(self, row, key):
-        value = row.get(key, None)
+    def get_optimal(self, row):
+        return row.get(self.optimal, None)
+
+    def format_rate_value(self, value):
         if "%" in value:
             return float(value.split("%")[0])
         else:
             return float(value) * 100
 
-    def extract_value(self, row, key):
+    def get_rate_value(self, row, key):
+        return self.format_rate_value(row.get(key, None))
+
+    def get_populated_value(self, columns):
+        return next(
+            (projection for projection in columns if projection is not None), None
+        )
+
+    def extract_csv_value(self, row, key):
         try:
             if key == self.base:
                 return self.get_base(row)
             elif key == self.ownership:
                 return self.get_ownership(row)
-            elif key == self.ceiling:
-                return self.get_ceiling(row)
             elif key == self.player:
                 return self.get_player(row)
             elif key == self.position:
                 return self.get_position(row)
-            elif key in [self.boom, self.optimal, self.cpt_rate, self.flex_rate]:
+            elif key == self.optimal:
+                return self.get_optimal(row)
+            elif key in [self.boom, self.cpt_rate, self.flex_rate]:
                 return self.get_rate_value(row, key)
             else:
                 return row.get(key, None)
@@ -87,6 +92,7 @@ class Columns:
             )
 
     def get_team_id_subquery():
+        # TODO: placeholder, will need to query DST entities based on name or something. For now, RTS and ETR have the dk slate ID
         pass
 
     def get_draft_group_players(self, row, draft_group_id, db_session):
@@ -127,7 +133,6 @@ class EstablishTheRunColumns(Columns):
             "DK Projection",
             None,
             "DK Ceiling",
-            None,
             "DK Value",
             None,
             None,
@@ -135,6 +140,14 @@ class EstablishTheRunColumns(Columns):
             None,
             None,
         )
+
+    def get_position(self, row):
+        return self.get_populated_value(
+            [row.get(self.position, None), row.get("Position", None)]
+        )
+
+    def get_base(self, row):
+        return self.get_populated_value([row.get(self.base, None), row.get("DK", None)])
 
 
 class RunTheSimsColumns(Columns):
@@ -145,9 +158,8 @@ class RunTheSimsColumns(Columns):
             "Position",
             "Base Projection",
             "Projection 50%",
-            "Projection Ceil",
+            "p080",
             "Pts/$",
-            None,
             "Boom Rate",
             "Optimal Rates",
             "Proj Own",
@@ -156,16 +168,14 @@ class RunTheSimsColumns(Columns):
         )
 
     def get_ownership(self, row):
-        ownership = self.get_populated_value(
-            [
-                row.get(self.ownership, None),
-                row.get("projOwn", None),
-            ],
+        return self.format_rate_value(
+            self.get_populated_value(
+                [
+                    row.get(self.ownership, None),
+                    row.get("projOwn", None),
+                ],
+            )
         )
-        if "%" in ownership:
-            return float(ownership.split("%")[0])
-        else:
-            return float(ownership) * 100
 
     def get_base(self, row):
         return self.get_populated_value(
@@ -173,14 +183,6 @@ class RunTheSimsColumns(Columns):
                 row.get(self.base, None),
                 row.get("projected points", None),
                 row.get("p050", None),
-            ],
-        )
-
-    def get_ceiling(self, row):
-        return self.get_populated_value(
-            [
-                row.get(self.ceiling, None),
-                row.get("p090", None),
             ],
         )
 
@@ -197,9 +199,14 @@ class RunTheSimsColumns(Columns):
             ],
         )
 
-    def get_populated_value(self, columns):
-        return next(
-            (projection for projection in columns if projection is not None), None
+    def get_optimal(self, row):
+        return self.format_rate_value(
+            self.get_populated_value(
+                [
+                    row.get(self.position, None),
+                    row.get("Optimal Rate", None),
+                ],
+            )
         )
 
 
@@ -211,7 +218,6 @@ class DailyRotoColumns(Columns):
             None,
             "DK Ceiling",
             None,
-            "DK Value",
             None,
             None,
             "DK Ownership",
@@ -226,7 +232,6 @@ class OneWeekSeasonColumns(Columns):
             None,
             "DK Ceiling",
             None,
-            "DK Value",
             None,
             None,
             "DK Ownership",
@@ -241,7 +246,6 @@ class GenericColumns(Columns):
             None,
             "DK Ceiling",
             None,
-            "DK Value",
             None,
             None,
             "DK Ownership",

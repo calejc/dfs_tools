@@ -26,10 +26,6 @@ def no_start_time_suffix(json):
     return json["ContestStartTimeSuffix"] is None
 
 
-def is_featured(json):
-    return json["DraftGroupTag"] == "Featured"
-
-
 def to_game_entity(json, dg_id):
     game = get_entity_by_type_and_id(json["competitionId"], Game)
     return (
@@ -39,7 +35,6 @@ def to_game_entity(json, dg_id):
             id=json["competitionId"],
             away=json["awayTeam"]["teamId"],
             home=json["homeTeam"]["teamId"],
-            draft_group_id=dg_id,
             start=to_py_date_time(json["startTime"]),
         )
     )
@@ -79,14 +74,14 @@ def persist_draft_group_data(dg):
                     id=dg_id,
                     site=Site.DRAFTKINGS,
                     start=to_py_date_time(dg["StartDate"]),
+                    suffix=dg["ContestStartTimeSuffix"],
                     type=SlateType.CLASSIC
                     if is_classic_game_type(dg)
                     else SlateType.SHOWDOWN,
+                    games=[
+                        to_game_entity(g, dg_id) for g in draft_group["competitions"]
+                    ],
                 )
-            )
-
-            db.session.add_all(
-                [to_game_entity(g, dg_id) for g in draft_group["competitions"]]
             )
             db.session.add_all(
                 [to_draft_group_player(p, dg_id) for p in draft_group["draftables"]]
@@ -98,16 +93,20 @@ def extract_slates():
     upcoming_slates = [
         draftGroup
         for draftGroup in requests.get(NFL_CONTESTS_URL).json()["DraftGroups"]
-        if (is_classic_game_type(draftGroup) and no_start_time_suffix(draftGroup))
-        or (is_showdown_game_type(draftGroup) and is_featured(draftGroup))
+        if is_classic_game_type(draftGroup) or is_showdown_game_type(draftGroup)
     ]
 
+    print("{} upcoming slates found".format(len(upcoming_slates)))
+
     if not upcoming_slates:
-        return
+        return {}
 
     with app.app_context():
-        [persist_draft_group_data(dg) for dg in upcoming_slates]
+        return [persist_draft_group_data(dg) for dg in upcoming_slates]
 
 
 def get_draft_groups():
-    return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
+    draft_groups = (
+        db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
+    )
+    return draft_groups if draft_groups else extract_slates()

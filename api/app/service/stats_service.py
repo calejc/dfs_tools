@@ -1,5 +1,4 @@
 import csv
-from dataclasses import asdict, fields
 from app.model.csv_mappings import *
 from app.model.models import *
 from app import app
@@ -19,16 +18,15 @@ def parse_row_to_projection_model(source, row, mapping, draft_group_id):
 
     new_projection = Projection(
         source=ProjectionSource(source).name,
-        base=mapping.extract_value(row, mapping.base),
-        median=mapping.extract_value(row, mapping.median),
-        ceiling=mapping.extract_value(row, mapping.ceiling),
-        value=mapping.extract_value(row, mapping.value),
-        etr_value=mapping.extract_value(row, mapping.etr_value),
-        boom=mapping.extract_value(row, mapping.boom),
-        optimal=mapping.extract_value(row, mapping.optimal),
-        ownership=mapping.extract_value(row, mapping.ownership),
-        cpt_rate=mapping.extract_value(row, mapping.cpt_rate),
-        flex_rate=mapping.extract_value(row, mapping.flex_rate),
+        base=mapping.extract_csv_value(row, mapping.base),
+        median=mapping.extract_csv_value(row, mapping.median),
+        ceiling=mapping.extract_csv_value(row, mapping.ceiling),
+        value=mapping.extract_csv_value(row, mapping.value),
+        boom=mapping.extract_csv_value(row, mapping.boom),
+        optimal=mapping.extract_csv_value(row, mapping.optimal),
+        ownership=mapping.extract_csv_value(row, mapping.ownership),
+        cpt_rate=mapping.extract_csv_value(row, mapping.cpt_rate),
+        flex_rate=mapping.extract_csv_value(row, mapping.flex_rate),
     )
     existing_projection = [
         proj for proj in draft_group_players[0].projections if proj.source == source
@@ -36,53 +34,48 @@ def parse_row_to_projection_model(source, row, mapping, draft_group_id):
     if existing_projection:
         proj = existing_projection[0]
         proj.base = (
-            mapping.extract_value(row, mapping.base)
-            if mapping.extract_value(row, mapping.base) is not None
+            mapping.extract_csv_value(row, mapping.base)
+            if mapping.extract_csv_value(row, mapping.base) is not None
             else proj.base
         )
         proj.median = (
-            mapping.extract_value(row, mapping.median)
-            if mapping.extract_value(row, mapping.median) is not None
+            mapping.extract_csv_value(row, mapping.median)
+            if mapping.extract_csv_value(row, mapping.median) is not None
             else proj.median
         )
         proj.ceiling = (
-            mapping.extract_value(row, mapping.ceiling)
-            if mapping.extract_value(row, mapping.ceiling) is not None
+            mapping.extract_csv_value(row, mapping.ceiling)
+            if mapping.extract_csv_value(row, mapping.ceiling) is not None
             else proj.ceiling
         )
         proj.value = (
-            mapping.extract_value(row, mapping.value)
-            if mapping.extract_value(row, mapping.value) is not None
+            mapping.extract_csv_value(row, mapping.value)
+            if mapping.extract_csv_value(row, mapping.value) is not None
             else proj.value
         )
-        proj.etr_value = (
-            mapping.extract_value(row, mapping.etr_value)
-            if mapping.extract_value(row, mapping.etr_value) is not None
-            else proj.etr_value
-        )
         proj.boom = (
-            mapping.extract_value(row, mapping.boom)
-            if mapping.extract_value(row, mapping.boom) is not None
+            mapping.extract_csv_value(row, mapping.boom)
+            if mapping.extract_csv_value(row, mapping.boom) is not None
             else proj.boom
         )
         proj.optimal = (
-            mapping.extract_value(row, mapping.optimal)
-            if mapping.extract_value(row, mapping.optimal) is not None
+            mapping.extract_csv_value(row, mapping.optimal)
+            if mapping.extract_csv_value(row, mapping.optimal) is not None
             else proj.optimal
         )
         proj.ownership = (
-            mapping.extract_value(row, mapping.ownership)
-            if mapping.extract_value(row, mapping.ownership) is not None
+            mapping.extract_csv_value(row, mapping.ownership)
+            if mapping.extract_csv_value(row, mapping.ownership) is not None
             else proj.ownership
         )
         proj.cpt_rate = (
-            mapping.extract_value(row, mapping.cpt_rate)
-            if mapping.extract_value(row, mapping.cpt_rate) is not None
+            mapping.extract_csv_value(row, mapping.cpt_rate)
+            if mapping.extract_csv_value(row, mapping.cpt_rate) is not None
             else proj.cpt_rate
         )
         proj.flex_rate = (
-            mapping.extract_value(row, mapping.flex_rate)
-            if mapping.extract_value(row, mapping.flex_rate) is not None
+            mapping.extract_csv_value(row, mapping.flex_rate)
+            if mapping.extract_csv_value(row, mapping.flex_rate) is not None
             else proj.flex_rate
         )
     else:
