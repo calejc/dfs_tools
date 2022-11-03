@@ -5,3 +5,8 @@ export const PROJECTION_SOURCE = {
   DR: 'Daily Roto',
   OTHER: 'Other'
 }
+
+export const GAME_TYPES = {
+  SHOWDOWN: 'showdown',
+  CLASSIC: 'classic'
+}

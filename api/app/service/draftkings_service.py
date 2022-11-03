@@ -1,13 +1,8 @@
 import requests
+from app.model.draftkings_api_constants import *
 from app.model.models import *
 from app import app
 from datetime import datetime
-
-NFL_CONTESTS_URL = "https://www.draftkings.com/lobby/getcontests?sport=NFL"
-DRAFTGROUPS_URL = "https://api.draftkings.com/draftgroups/v1/draftgroups/{}/draftables"
-SLEEPER_API_URL = "https://api.sleeper.app/v1/players/nfl"
-
-DRAFTKINGS_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 
 def to_py_date_time(str):
@@ -15,29 +10,41 @@ def to_py_date_time(str):
 
 
 def is_showdown_game_type(json):
-    return json["GameTypeId"] == 96
+    return json[DRAFT_GROUP_GAME_TYPE] == SHOWDOWN
 
 
 def is_classic_game_type(json):
-    return json["GameTypeId"] == 1
+    return json[DRAFT_GROUP_GAME_TYPE] == CLASSIC
 
 
 def no_start_time_suffix(json):
-    return json["ContestStartTimeSuffix"] is None
+    return json[DRAFT_GROUP_START_TIME_SUFFIX] is None
 
 
-def to_game_entity(json, dg_id):
-    game = get_entity_by_type_and_id(json["competitionId"], Game)
+def is_flex(json):
+    return json[DRAFTABLE_ROSTER_SLOT_ID] == FLEX_ROSTER_SLOT_ID
+
+
+def is_dst(json):
+    return json[DRAFTABLE_ROSTER_SLOT_ID] == DST_ROSTER_SLOT_ID
+
+
+def to_game_entity(json):
+    game = get_entity_by_type_and_id(json[COMPETITION_ID], Game)
     return (
         game
         if game
         else Game(
-            id=json["competitionId"],
-            away=json["awayTeam"]["teamId"],
-            home=json["homeTeam"]["teamId"],
-            start=to_py_date_time(json["startTime"]),
+            id=json[COMPETITION_ID],
+            away=json[COMPETITION_AWAY_TEAM][COMPETITION_TEAM_ID],
+            home=json[COMPETITION_HOME_TEAM][COMPETITION_TEAM_ID],
+            start=to_py_date_time(json[COMPETITION_START_TIME]),
         )
     )
+
+
+def query_upcoming_draft_groups():
+    return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
 
 
 def get_entity_by_type_and_id(id, clazz):
@@ -46,13 +53,16 @@ def get_entity_by_type_and_id(id, clazz):
 
 def to_draft_group_player(json, dg_id):
     return DraftGroupPlayer(
-        id=json["draftableId"],
-        salary=json["salary"],
-        player_id=json["playerId"] if json["rosterSlotId"] != 71 else None,
-        game_id=json["competition"]["competitionId"],
-        team_id=json["teamId"],
-        roster_slot_id=json["rosterSlotId"],
+        id=json[DRAFTABLE_ID],
+        salary=json[DRAFTABLE_SALARY],
+        player_id=json[DRAFTABLE_PLAYER_ID]
+        if json[DRAFTABLE_ROSTER_SLOT_ID] != 71
+        else None,
+        game_id=json[DRAFTABLE_COMPETITION][COMPETITION_ID],
+        team_id=json[DRAFTABLE_TEAM_ID],
+        roster_slot_id=json[DRAFTABLE_ROSTER_SLOT_ID],
         draft_group_id=dg_id,
+        flex_id=json.get("flex_id", None),
     )
 
 
@@ -65,34 +75,44 @@ def draftable_to_player_entity():
 
 
 def persist_draft_group_data(dg):
-    dg_id = dg["DraftGroupId"]
-    if not get_entity_by_type_and_id(dg_id, DraftGroup):
-        draft_group = requests.get(DRAFTGROUPS_URL.format(dg_id)).json()
-        if draft_group["draftables"]:
-            db.session.add(
-                DraftGroup(
-                    id=dg_id,
-                    site=Site.DRAFTKINGS,
-                    start=to_py_date_time(dg["StartDate"]),
-                    suffix=dg["ContestStartTimeSuffix"],
-                    type=SlateType.CLASSIC
-                    if is_classic_game_type(dg)
-                    else SlateType.SHOWDOWN,
-                    games=[
-                        to_game_entity(g, dg_id) for g in draft_group["competitions"]
-                    ],
-                )
+    dg_id = dg[DRAFT_GROUP_ID]
+    draft_group = requests.get(DRAFTGROUPS_URL.format(dg_id)).json()
+    if draft_group[DRAFT_GROUP_DRAFTABLES]:
+        db.session.add(
+            DraftGroup(
+                id=dg_id,
+                site=Site.DRAFTKINGS,
+                start=to_py_date_time(dg[DRAFT_GROUP_START_DATE]),
+                suffix=dg[DRAFT_GROUP_START_TIME_SUFFIX],
+                type=SlateType.CLASSIC
+                if is_classic_game_type(dg)
+                else SlateType.SHOWDOWN,
+                games=[
+                    to_game_entity(g) for g in draft_group[DRAFT_GROUP_COMPETITIONS]
+                ],
             )
-            db.session.add_all(
-                [to_draft_group_player(p, dg_id) for p in draft_group["draftables"]]
-            )
-            db.session.commit()
+        )
+
+        players_json = draft_group[DRAFT_GROUP_DRAFTABLES]
+        if is_classic_game_type(dg):
+            flex = {}
+            non_flex = {}
+            for p in draft_group[DRAFT_GROUP_DRAFTABLES]:
+                if is_flex(p):
+                    flex[p[DRAFTABLE_PLAYER_ID]] = {"flex_id": p[DRAFTABLE_ID]}
+                else:
+                    non_flex[p[DRAFTABLE_PLAYER_ID]] = p
+            players_json = [
+                {**player, **flex.get(p_id, {})} for p_id, player in non_flex.items()
+            ]
+        db.session.add_all([to_draft_group_player(p, dg_id) for p in players_json])
+        db.session.commit()
 
 
 def extract_slates():
     upcoming_slates = [
         draftGroup
-        for draftGroup in requests.get(NFL_CONTESTS_URL).json()["DraftGroups"]
+        for draftGroup in requests.get(NFL_CONTESTS_URL).json()[DRAFT_GROUPS]
         if is_classic_game_type(draftGroup) or is_showdown_game_type(draftGroup)
     ]
 
@@ -102,11 +122,13 @@ def extract_slates():
         return {}
 
     with app.app_context():
-        return [persist_draft_group_data(dg) for dg in upcoming_slates]
+        return [
+            persist_draft_group_data(dg)
+            for dg in upcoming_slates
+            if dg[DRAFT_GROUP_ID] not in [dg.id for dg in query_upcoming_draft_groups()]
+        ]
 
 
 def get_draft_groups():
-    draft_groups = (
-        db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
-    )
+    draft_groups = query_upcoming_draft_groups()
     return draft_groups if draft_groups else extract_slates()

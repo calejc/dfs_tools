@@ -14,7 +14,7 @@ import {
   TextField
 } from '@mui/material'
 import '../../App.css'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { POSITIONS, setLineupPlayer } from '../../state/lineup'
 import { ACTIONS, dataTableSortAndFilterReducer, DEFAULT_SORTING_AND_FILTERING_STATE, SORT_DIR } from './dataTableSortAndFilterReducer'
 import { playerValueGetter } from './DATA_TABLE_COLUMN'
@@ -23,10 +23,11 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
   const dispatch = useDispatch()
   const [sortingAndFiltering, sortingAndFilteringDispatch] = useReducer(dataTableSortAndFilterReducer, DEFAULT_SORTING_AND_FILTERING_STATE(defaultSort.field))
   const [tableData, setTableData] = useState([])
+  const lineup = useSelector(state => state.lineup.value)
 
   useEffect(() => {
     setSortedAndFilteredTableData()
-  }, [sortingAndFiltering])
+  }, [sortingAndFiltering, lineup])
 
   useEffect(() => {
     sortingAndFilteringDispatch({ type: ACTIONS.RESET, payload: defaultSort.field })
@@ -55,6 +56,9 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
 
   const onPlayerSelect = (player) => {
     dispatch(setLineupPlayer(player))
+    if (sortingAndFiltering.query !== '') {
+      sortingAndFilteringDispatch({ type: ACTIONS.QUERY, payload: '' })
+    }
   }
 
   const isDesc = () => {
@@ -69,14 +73,25 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
     })
   }
 
+  const playerForFilter = (player) => {
+    if (parseInt(sortingAndFiltering.filter) === 0) {
+      return true
+    }
+
+    if (parseInt(sortingAndFiltering.filter) === 70) {
+      return player.flex_id
+    }
+
+    return parseInt(sortingAndFiltering.filter) === parseInt(player.roster_slot_id)
+  }
+
+  const playerNotAlreadySelected = (p) => {
+    return !lineup.map(s => s.value)?.includes(p)
+  }
+
   const filteredPlayers = () => {
     return data.players.filter(p => {
-      return (
-        sortingAndFiltering.filter === 0 ?
-          p.roster_slot_id !== 70 :
-          parseInt(sortingAndFiltering.filter) === parseInt(p.roster_slot_id)
-      ) &&
-        playerValueGetter(p).toUpperCase().includes(sortingAndFiltering.query)
+      return playerNotAlreadySelected(p) && playerForFilter(p) && playerValueGetter(p).toUpperCase().includes(sortingAndFiltering.query)
     })
   }
 

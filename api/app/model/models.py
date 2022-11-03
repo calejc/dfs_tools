@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 
 class SlateType(str, enum.Enum):
-    SHOWDOWN = ("showdown",)
+    SHOWDOWN = "showdown"
     CLASSIC = "classic"
 
 

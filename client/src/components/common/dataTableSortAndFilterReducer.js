@@ -32,6 +32,7 @@ export const dataTableSortAndFilterReducer = (state, action) => {
     case ACTIONS.QUERY:
       return {
         ...state,
+        filter: 0,
         query: action.payload.toUpperCase()
       }
     case ACTIONS.FILTER:

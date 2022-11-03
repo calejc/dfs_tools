@@ -88,7 +88,8 @@ const lineupSlice = createSlice({
     setPlayer(state, action) {
       const player = action.payload
       const positionSpecificSlots = state.value.filter(x => {
-        return (parseInt(x.roster_slot_id) === parseInt(player.roster_slot_id)) &&
+        return (parseInt(x.roster_slot_id) === parseInt(player.roster_slot_id) ||
+        (parseInt(x.roster_slot_id) == 70 && player.flex_id)) &&
           Object.keys(x.value).length === 0
       })
       if (positionSpecificSlots.length > 0) {
