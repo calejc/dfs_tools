@@ -129,6 +129,11 @@ def extract_slates():
         ]
 
 
+def get_draft_group_players(draft_group_id):
+    return get_entity_by_type_and_id(draft_group_id, DraftGroup).serialize(True)
+
+
 def get_draft_groups():
-    draft_groups = query_upcoming_draft_groups()
-    return draft_groups if draft_groups else extract_slates()
+    existing_draft_groups = query_upcoming_draft_groups()
+    draft_groups = existing_draft_groups if existing_draft_groups else extract_slates()
+    return [dg.serialize() for dg in draft_groups]

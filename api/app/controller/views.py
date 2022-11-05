@@ -39,6 +39,10 @@ def fetch_new_draft_groups():
     extract_slates()
     return {}
 
+@app.route('/draft-group/<dgid>')
+def get_draft_group_with_players(dgid):
+    return jsonify(get_draft_group_players(dgid))
+
 
 @app.route("/upcoming-draft-groups")
 def get_upcoming_draft_groups():

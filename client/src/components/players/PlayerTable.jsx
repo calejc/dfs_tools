@@ -1,41 +1,37 @@
-import React from 'react'
+import { Typography } from '@mui/material'
+import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import useLoading from '../../hooks/useLoading'
+import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
 import DataTable from '../common/DataTable'
-import DATA_TABLE_COLUMN from '../common/DATA_TABLE_COLUMN'
+import LoadingBox from '../common/LoadingBox'
 
-export default function PlayerTable() {
-  const { draftGroups, selectedDraftGroup } = useSelector(state => state.draftGroups)
+export default function PlayerTable({ columns, defaultSort, selectedDraftGroup }) {
+  const { status } = useSelector(state => state.draftGroup)
+  const { isLoading, loading, done } = useLoading()
 
-  const BASE_COLUMN_SET = [
-    DATA_TABLE_COLUMN.Position,
-    DATA_TABLE_COLUMN.PlayerName,
-    DATA_TABLE_COLUMN.Salary,
-    DATA_TABLE_COLUMN.BaseProjection,
-    DATA_TABLE_COLUMN.CeilingProjection,
-    DATA_TABLE_COLUMN.Ownership
-  ]
+  useEffect(() => {
+    if (REQUEST_STATUS.IN_PROGRESS === status) {
+      loading()
+    } else {
+      done()
+    }
+  }, [status])
 
-  const COLUMNS_FOR_CLASSIC_GAME_TYPE = [
-    ...BASE_COLUMN_SET,
-    DATA_TABLE_COLUMN.OptimalRate,
-    DATA_TABLE_COLUMN.BoomRate
-  ]
-
-  const COLUMNS_FOR_SHOWDOWN_GAME_TYPE = [
-    ...BASE_COLUMN_SET,
-    DATA_TABLE_COLUMN.CaptainRate,
-    DATA_TABLE_COLUMN.FlexRate
-  ]
-
-  const isShowdown = () => {
-    return draftGroups.find(dg => dg.id === selectedDraftGroup)?.type === 'showdown'
+  if (status === REQUEST_STATUS.NOT_STARTED) {
+    return <Typography margin='10px' variant='h6'>Please select a slate</Typography>
   }
 
-  return (selectedDraftGroup && (
-    <DataTable
-      defaultSort={DATA_TABLE_COLUMN.Salary}
-      columns={isShowdown() ? COLUMNS_FOR_SHOWDOWN_GAME_TYPE : COLUMNS_FOR_CLASSIC_GAME_TYPE}
-      data={draftGroups.filter((x) => x.id === selectedDraftGroup)[0]}
-    />
-  ))
+  return (
+    <>
+      <LoadingBox isLoading={isLoading} />
+      {(!isLoading && Object.keys(selectedDraftGroup).length > 0) && (
+        <DataTable
+          defaultSort={defaultSort}
+          columns={columns}
+          data={selectedDraftGroup}
+        />
+      )}
+    </>
+  )
 }

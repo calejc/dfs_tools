@@ -1,8 +1,9 @@
 from datetime import datetime
 import enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Union
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
 
 db = SQLAlchemy()
 
@@ -191,7 +192,7 @@ class DraftGroupPlayer(db.Model):
     # )
 
 
-@dataclass
+@dataclass(repr=False)
 class DraftGroup(db.Model):
     __tablename__ = "draft_group"
     id: int = db.Column(db.Integer, primary_key=True)
@@ -203,3 +204,14 @@ class DraftGroup(db.Model):
     games: List[Game] = db.relationship(
         "Game", secondary=draft_group_game_relational_table
     )
+
+    def serialize(self, eager_fetch=False):
+        return {
+            "id": self.id,
+            "site": self.site,
+            "type": self.type,
+            "start": self.start.isoformat(),
+            "suffix": self.suffix,
+            "games": self.games if eager_fetch else len(self.games),
+            "players": self.players if eager_fetch else [],
+        }
