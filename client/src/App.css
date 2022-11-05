@@ -40,3 +40,8 @@
   min-height: 0px!important;
   min-width: 0px!important;
 }
+
+.tab-card-text {
+  text-transform: none!important;
+  text-align: start!important;
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Card, CardContent, Grid, Typography } from '@mui/material'
+import { Box, Card, CardContent, Grid, Tab, Tabs, tabsClasses, Typography } from '@mui/material'
 import toReadableDate from '../../util/toReadableDate'
 import '../../App.css'
 import { setLineupShell } from '../../state/lineup'
@@ -21,7 +21,7 @@ export default function DraftGroupSelect() {
     dispatch(setLineupShell(selectedDraftGroup?.type))
   }, [selectedDraftGroup])
 
-  const onSelect = (id) => {
+  const onSelect = (e, id) => {
     setSelectedDraftGroupId(id)
     dispatch(fetchDraftGroupById(id))
   }
@@ -55,42 +55,51 @@ export default function DraftGroupSelect() {
   }
 
   const draftGroupGamesDescriptor = (dg) => {
-    return dg.games > 1 ? `${dg.games} games` : <br/>
+    return dg.games > 1 ? `${dg.games} games` : <br />
   }
 
   return (
     <>
       <LoadingBox isLoading={isLoading} />
       {(!isLoading && draftGroups.length > 0) && (
-        <Grid
+        <Box
           sx={{ mt: '50px' }}
-          container
-          direction='row'
-          columnSpacing={2}
-          justifyContent='flex-start'
-          alignItems='center'
         >
-          {draftGroups.map((dg) => {
-            return <Grid
-              item
-              key={dg.id}
-              sx={{ cursor: 'pointer' }}
-              onClick={() => onSelect(dg.id)}
-            >
-              <Card
-                sx={{ border: '1px solid black' }}
-                className={cardClassName(dg.id)}
-              >
-                <CardContent>
-                  <Typography>{toReadableDate(dg.start)}</Typography>
-                  <SubHeader text={draftGroupTypeDescriptor(dg)} />
-                  <SubHeader text={draftGroupSuffixDescriptor(dg)} />
-                  <SubHeader text={draftGroupGamesDescriptor(dg)} />
-                </CardContent>
-              </Card>
-            </Grid>
-          })}
-        </Grid>
+          <Tabs
+            value={selectedDraftGroupId}
+            onChange={onSelect}
+            variant='scrollable'
+            scrollButtons
+            sx={{
+              [`& .${tabsClasses.scrollButtons}`]: {
+                '&.Mui-disabled': { opacity: 0.3 },
+              },
+            }}
+          >
+            {draftGroups.map((dg) => {
+              return <Tab
+                value={dg.id}
+                key={dg.id}
+                sx={{ cursor: 'pointer', padding: '4px!important' }}
+                label={
+                  <Card
+                    width='100%'
+                    padding='0px'
+                    sx={{ border: '1px solid black' }}
+                    className={cardClassName(dg.id)}
+                  >
+                    <CardContent sx={{ padding: '10px!important' }}>
+                      <Typography className='tab-card-text'>{toReadableDate(dg.start)}</Typography>
+                      <SubHeader text={draftGroupTypeDescriptor(dg)} />
+                      <SubHeader text={draftGroupSuffixDescriptor(dg)} />
+                      <SubHeader text={draftGroupGamesDescriptor(dg)} />
+                    </CardContent>
+                  </Card>
+                }
+              />
+            })}
+          </Tabs>
+        </Box>
       )}
     </>
   )
