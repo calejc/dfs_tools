@@ -1,4 +1,5 @@
 import React, { useEffect, useReducer, useState } from 'react'
+import '../../App.css'
 import {
   Tabs,
   Tab,
@@ -11,13 +12,15 @@ import {
   TableBody,
   TableFooter,
   TablePagination,
-  TextField
+  TextField,
+  Checkbox,
+  FormGroup,
+  FormControlLabel
 } from '@mui/material'
 import '../../App.css'
 import { useDispatch, useSelector } from 'react-redux'
 import { POSITIONS, setLineupPlayer } from '../../state/lineup'
 import { ACTIONS, dataTableSortAndFilterReducer, DEFAULT_SORTING_AND_FILTERING_STATE, SORT_DIR } from './dataTableSortAndFilterReducer'
-import { playerValueGetter } from './DATA_TABLE_COLUMN'
 
 export default function DataTable({ columns, data, defaultSort, tabFilters = true }) {
   const dispatch = useDispatch()
@@ -89,9 +92,13 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
     return !lineup.map(s => s.value)?.includes(p)
   }
 
+  const hasProjection = (p) => {
+    return sortingAndFiltering.showAll ? true : [p.base, p.ceiling, p.ownership].some(projectedValue => projectedValue !== null && parseInt(projectedValue) !== 0)
+  }
+
   const filteredPlayers = () => {
     return data.players.filter(p => {
-      return playerNotAlreadySelected(p) && playerForFilter(p) && playerValueGetter(p).toUpperCase().includes(sortingAndFiltering.query)
+      return playerNotAlreadySelected(p) && playerForFilter(p) && p.player.toUpperCase().includes(sortingAndFiltering.query) && hasProjection(p)
     })
   }
 
@@ -110,13 +117,17 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
     return Object.keys(POSITIONS).filter(k => POSITIONS[k].draftGroupType === data.type)
   }
 
+  const togglePlayersNotProjected = (e) => {
+    sortingAndFilteringDispatch({ type: ACTIONS.SHOW_ALL, payload: !e.target.checked })
+  }
+
   return (
     <TableContainer sx={{ border: '1px solid rgba(224, 224, 224, 1)', borderRadius: '5px' }} >
       <Table size='small'>
         <TableHead>
-          <TableRow>
+          <TableRow className='player-table-header-row'>
             {tabFilters && (
-              <TableCell colSpan={columns.length - 3} padding='none'>
+              <TableCell colSpan={columns.length - 6} padding='none'>
                 <Tabs
                   value={sortingAndFiltering.filter}
                   className='position-tabs-group'
@@ -129,6 +140,19 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
                 </Tabs>
               </TableCell>
             )}
+            <TableCell padding='none' colSpan={3}>
+              <FormGroup
+                sx={{ lineHeight: '16px', padding: '2px 6px', fontSize: '10px!important' }}
+              >
+                <FormControlLabel
+                  sx={{ lineHeight: '16px!important', padding: '2px 6px', fontSize: '10px!important' }}
+                  label="Hide 0 proj"
+                  control={
+                    <Checkbox sx={{ padding: '2px 6px' }} size='small' checked={!sortingAndFiltering.showAll} onChange={togglePlayersNotProjected} />
+                  }
+                />
+              </FormGroup>
+            </TableCell>
             <TableCell
               colSpan={3}
               padding='none'
@@ -144,12 +168,12 @@ export default function DataTable({ columns, data, defaultSort, tabFilters = tru
               />
             </TableCell>
           </TableRow>
-          <TableRow>
+          <TableRow className='player-table-header-row'>
             {columns.map(col => (
               <TableCell
                 key={col.field}
                 sortDirection={(col.sortable && sortingAndFiltering.sortBy === col.field) ? sortingAndFiltering.sortDir : false}
-                sx={{ padding: '2px 6px!important' }}
+                sx={{ padding: '2px 6px!important', lineHeight: '16px', fontWeight: 'bold' }}
               >
                 {col.sortable ?
                   <TableSortLabel

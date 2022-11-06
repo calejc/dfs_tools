@@ -47,3 +47,9 @@ def get_draft_group_with_players(dgid):
 @app.route("/upcoming-draft-groups")
 def get_upcoming_draft_groups():
     return jsonify(get_draft_groups())
+
+
+@app.route('/optimize')
+def run_optimizer():
+    optimize()
+    return {}

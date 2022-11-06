@@ -9,6 +9,7 @@ export const ACTIONS = {
   SORT: "SORT",
   PAGE: "PAGE",
   PER_PAGE: "PER_PAGE",
+  SHOW_ALL: 'SHOW_ALL',
   RESET: "RESET"
 }
 
@@ -23,7 +24,8 @@ export function DEFAULT_SORTING_AND_FILTERING_STATE(defaultSortBy) {
     sortBy: defaultSortBy,
     sortDir: SORT_DIR.DESCENDING,
     page: DEFAULT_PAGE,
-    perPage: DEFAULT_PER_PAGE
+    perPage: DEFAULT_PER_PAGE,
+    showAll: false
   }
 }
 
@@ -56,6 +58,11 @@ export const dataTableSortAndFilterReducer = (state, action) => {
         ...state,
         perPage: action.payload.perPage,
         page: DEFAULT_PAGE
+      }
+    case ACTIONS.SHOW_ALL:
+      return {
+        ...state,
+        showAll: action.payload
       }
     case ACTIONS.RESET:
       return DEFAULT_SORTING_AND_FILTERING_STATE(action.payload)

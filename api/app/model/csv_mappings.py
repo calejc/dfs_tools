@@ -203,7 +203,7 @@ class RunTheSimsColumns(Columns):
         return self.format_rate_value(
             self.get_populated_value(
                 [
-                    row.get(self.position, None),
+                    row.get(self.optimal, None),
                     row.get("Optimal Rate", None),
                 ],
             )

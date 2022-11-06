@@ -1,9 +1,8 @@
 from datetime import datetime
 import enum
-from dataclasses import dataclass, field
-from typing import List, Union
+from dataclasses import dataclass
+from typing import List
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import inspect
 
 db = SQLAlchemy()
 
@@ -26,21 +25,20 @@ class ProjectionSource(str, enum.Enum):
     OTHER = "other"
 
 
-def avg_column_property(id, col, round):
+def avg_column_property(draftable_id, col, round, single_source=None):
+    filters = [
+        draft_group_player_projection_relational_table.c.draft_group_player_id
+        == draftable_id,
+        draft_group_player_projection_relational_table.c.projection_id == Projection.id,
+    ]
+    filters.append(Projection.source == single_source) if single_source else None
     return db.column_property(
         db.select(
             db.func.round(
                 db.func.avg(col).label("{}".format(str(col).split(".")[1])), round
             )
         )
-        .where(
-            db.and_(
-                draft_group_player_projection_relational_table.c.draft_group_player_id
-                == id,
-                draft_group_player_projection_relational_table.c.projection_id
-                == Projection.id,
-            )
-        )
+        .where(db.and_(*filters))
         .scalar_subquery()
     )
 
@@ -158,7 +156,9 @@ class DraftGroupPlayer(db.Model):
     optimal: float
     cpt_rate: float
     flex_rate: float
-    player: Union[PlayerEntity, TeamEntity]
+    player: str
+    team: str
+    opp: str
     id: int = db.Column(db.Integer, primary_key=True)
     salary: int = db.Column(db.Integer, nullable=False)
     roster_slot_id: int = db.Column(db.Integer, nullable=False)
@@ -169,27 +169,42 @@ class DraftGroupPlayer(db.Model):
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
     _player = db.relationship("PlayerEntity")
     _team = db.relationship("TeamEntity")
+    _game = db.relationship("Game")
     projections = db.relationship(
         "Projection", secondary=draft_group_player_projection_relational_table
     )
 
     @property
     def player(self):
-        return self._player if self.player_id else self._team
+        return (
+            self._player.full_name
+            if self.player_id and self._player
+            else self._team.nickname
+        )
 
     base = avg_column_property(id, Projection.base, 2)
     ceiling = avg_column_property(id, Projection.ceiling, 2)
     median = avg_column_property(id, Projection.median, 2)
     value = avg_column_property(id, Projection.value, 2)
-    ownership = avg_column_property(id, Projection.ownership, 3)
+    ownership = avg_column_property(
+        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
+    )
     boom = avg_column_property(id, Projection.boom, 3)
     optimal = avg_column_property(id, Projection.optimal, 3)
     cpt_rate = avg_column_property(id, Projection.cpt_rate, 2)
     flex_rate = avg_column_property(id, Projection.flex_rate, 2)
 
-    # opp = db.column_property(
-    #     db.select()
-    # )
+    @property
+    def team(self):
+        return self._team.dk_abbr
+
+    @property
+    def opp(self):
+        return [
+            team.dk_abbr
+            for team in [self._game.home_team, self._game.away_team]
+            if team.dk_id != self.team_id
+        ][0]
 
 
 @dataclass(repr=False)

@@ -28,7 +28,7 @@ const modalStyle = {
 }
 
 export default function FileUploadModal({ open, onClose }) {
-  const { draftGroups } = useSelector(state => state.draftGroups)
+  const { value: draftGroups } = useSelector(state => state.draftGroups)
   const [file, setFile] = useState()
   const [source, setSource] = useState()
   const [draftGroup, setDraftGroup] = useState()
@@ -98,10 +98,11 @@ export default function FileUploadModal({ open, onClose }) {
                   >
                     {draftGroups.map(dg => {
                       return <MenuItem
+                        sx={{ fontSize: '14px' }}
                         key={dg.id}
                         value={dg.id}
                       >
-                        {`${toReadableDate(dg.start)} (${dg.games.length} games)`}
+                        {`${toReadableDate(dg.start)} ${dg.suffix ? dg.suffix : 'Main'}`}
                       </MenuItem>
                     })}
                   </Select>

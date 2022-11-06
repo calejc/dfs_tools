@@ -19,12 +19,13 @@
 }
 
 @keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+  from {
+    transform: rotate(0deg);
+  }
 
-.selected {
-  background-color: #F0EEEE!important;
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .not-selected {
@@ -32,16 +33,20 @@
 }
 
 .position-tabs-group {
-  min-height: 0px!important;
+  min-height: 0px !important;
 }
 
 .position-tab {
-  padding: 6px 8px!important;
-  min-height: 0px!important;
-  min-width: 0px!important;
+  padding: 6px 8px !important;
+  min-height: 0px !important;
+  min-width: 0px !important;
 }
 
 .tab-card-text {
-  text-transform: none!important;
-  text-align: start!important;
+  text-transform: none !important;
+  text-align: start !important;
+}
+
+.player-table-header-row {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05));
 }

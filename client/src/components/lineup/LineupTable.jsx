@@ -14,7 +14,6 @@ import {
 import prettifyDollarValue from '../../util/prettifyDollarValue'
 import CloseIcon from '@mui/icons-material/Close'
 import { removeLineupPlayer } from '../../state/lineup'
-import { playerValueGetter } from '../common/DATA_TABLE_COLUMN'
 
 export default function LineupTable() {
   const [useCeiling, setUseCeiling] = useState(true)
@@ -118,7 +117,7 @@ export default function LineupTable() {
             return (
               <TableRow key={i}>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{row.label}</TableCell>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{playerValueGetter(row.value)}</TableCell>
+                <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.player}</TableCell>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{projectionValue(row.value)}</TableCell>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.ownership}</TableCell>
                 <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.salary}</TableCell>
