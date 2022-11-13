@@ -10,3 +10,8 @@ export const GAME_TYPES = {
   SHOWDOWN: 'showdown',
   CLASSIC: 'classic'
 }
+
+export const SORT_DIR = {
+  ASCENDING: 'asc',
+  DESCENDING: 'desc'
+}

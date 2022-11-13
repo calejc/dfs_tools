@@ -1,18 +1,13 @@
 import re
-from pulp import LpMaximize, LpProblem, lpSum, LpVariable
+from pulp import LpMaximize, LpProblem, lpSum, LpVariable, LpStatus
 from app.model.models import *
 from app import app
 
 
-def name(p):
-    if p.roster_slot_id == 71:
-        return p.player.name
-    else:
-        return p.player.full_name
-
-
 def summary(prob):
     div = "---------------------------------------\n"
+    print(LpStatus[prob.status])
+    print(div)
     print("Variables:\n")
     score = str(prob.objective)
     constraints = [str(const) for const in prob.constraints.values()]
@@ -21,11 +16,10 @@ def summary(prob):
         constraints = [const.replace(v.name, str(v.varValue)) for const in constraints]
         if v.varValue != 0:
             print(
-                name(
-                    db.session.query(DraftGroupPlayer)
-                    .filter(DraftGroupPlayer.id == v.name.split("_")[1])
-                    .first()
-                )
+                db.session.query(DraftGroupPlayer)
+                .filter(DraftGroupPlayer.id == v.name.split("_")[1])
+                .first()
+                .player
             )
     print(div)
     print("Constraints:")
@@ -48,25 +42,51 @@ def optimize():
             "sal": p.salary,
             "pts": p.ceiling,
             "pos": p.roster_slot_id,
-            "team": p.team_id,
+            "team": p.team,
+            "opp": p.opp,
         }
         for p in db.session.query(DraftGroupPlayer)
         .filter(
-            DraftGroupPlayer.draft_group_id == 76225,
+            DraftGroupPlayer.draft_group_id == 77210,
             DraftGroupPlayer.roster_slot_id != 70,
         )
         .all()
         if p.ceiling is not None
     }
-    print(players)
     player_vars = LpVariable.dicts("player", players.keys(), cat="Binary")
     model = LpProblem(name="testing", sense=LpMaximize)
+
+    # force double stack
+    # for qb in [p for p in players if players[p]["pos"] == 66]:
+    #     model += (
+    #         lpSum(
+    #             [
+    #                 player_vars[i]
+    #                 for i, data in players.items()
+    #                 if data["team"] == players[qb]["team"] and data["pos"] != 71
+    #             ]
+    #             + [-3 * player_vars[qb]]
+    #         )
+    #         >= 0
+    #     )
+
+    #     model += (
+    #         lpSum(
+    #             [
+    #                 player_vars[i]
+    #                 for i, data in players.items()
+    #                 if data["team"] == players[qb]["opp"] and data["pos"] != 71
+    #             ]
+    #             + [-1 * player_vars[qb]]
+    #         )
+    #         >= 0
+    #     )
+
     model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
     model += (
         lpSum([players[p]["sal"] * player_vars[p] for p in players.keys()])
         <= SALARY_CAP
     )
-    model += lpSum([player_vars[p] for p in players.keys()]) == 9
 
     # RB
     model += (
@@ -113,9 +133,9 @@ def optimize():
     )
 
     # TE
-    teSum = [
-        player_vars[p] for p, player_data in players.items() if player_data["pos"] == 69
-    ]
+    # teSum = [
+    # player_vars[p] for p, player_data in players.items() if player_data["pos"] == 69
+    # ]
     model += (
         lpSum(
             [
@@ -126,16 +146,16 @@ def optimize():
         )
         == 1
     )
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == 69
-            ]
-        )
-        <= 2
-    )
+    # model += (
+    #     lpSum(
+    #         [
+    #             player_vars[p]
+    #             for p, player_data in players.items()
+    #             if player_data["pos"] == 69
+    #         ]
+    #     )
+    #     <= 2
+    # )
 
     # QB
     model += (
@@ -161,27 +181,49 @@ def optimize():
         == 1
     )
 
-    # for qb in [p for p in players if players[p]["pos"] == 66]:
-    # print(qb)
-    # model += lpSum(
-    # [player_vars[i] for i, data in players.items() if data['team'] == players[qb]['team']] + [-3*player_vars[qb]]
-    # ) >= 0
-    # 24927816
-    model += lpSum(player_vars[24927739]) == 1
-    model += lpSum(player_vars[24928154]) == 1
+    model += lpSum([player_vars[p] for p in players.keys()]) == 9
+
+    # No two or more RB/WR/TE from same team.
+    # for rbwrte in [p for p in players if players[p]["pos"] in (67, 68, 69)]:
+    #     qb_for_team = sorted(
+    #         [
+    #             p
+    #             for p, player_data in players.items()
+    #             if player_data["team"] == players[rbwrte]["team"]
+    #             and player_data["pos"] == 66
+    #         ],
+    #         key=lambda x: players[x]["pts"],
+    #     )[0]
+    #     print("{} - {} || {} - {}".format(rbwrte, players[rbwrte]['team'], qb_for_team, players[qb_for_team]['team']))
+    #     model += (
+    #         lpSum(
+    #             player_vars[i]
+    #             for i, data in players.items()
+    #             if data["team"] == players[rbwrte]["team"]
+    #             and i != qb_for_team
+    #             and data['pos'] != 71
+    #         )
+    #         <= 1
+    #     )
+
     model += (
-        lpSum(
-            player_vars[24928088]
-            + player_vars[24928108]
-            + player_vars[24928510]
-            + player_vars[24928518]
-        )
-        == 4
+        lpSum(player_vars[25194822]) == 1
     )
-    model += (
-        lpSum(player_vars[24928130] + player_vars[24928114] + player_vars[24928186])
-        == 0
-    )
+
+    # model += (
+    #     lpSum(
+    #         [
+    #             player_vars[p]
+    #             for p, player_data in players.items()
+    #             if player_data["sal"] == 3000
+    #         ]
+    #     )
+    #     == 0
+    # )
+    # model += (
+    #     lpSum(player_vars[25195120])
+    #     == 0
+    # )
 
     model.solve()
     summary(model)

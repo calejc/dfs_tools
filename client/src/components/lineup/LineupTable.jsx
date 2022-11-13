@@ -12,8 +12,8 @@ import {
   TableRow
 } from '@mui/material'
 import prettifyDollarValue from '../../util/prettifyDollarValue'
-import CloseIcon from '@mui/icons-material/Close'
 import { removeLineupPlayer } from '../../state/lineup'
+import DATA_TABLE_COLUMN from '../common/DATA_TABLE_COLUMN'
 
 export default function LineupTable() {
   const [useCeiling, setUseCeiling] = useState(true)
@@ -22,6 +22,15 @@ export default function LineupTable() {
   const [lineupProductOwnership, setLineupProductOwnership] = useState()
   const lineup = useSelector(state => state.lineup.value)
   const dispatch = useDispatch()
+
+  const COLS = [
+    DATA_TABLE_COLUMN.Position,
+    DATA_TABLE_COLUMN.PlayerName,
+    DATA_TABLE_COLUMN.Points,
+    DATA_TABLE_COLUMN.SalaryShort,
+    DATA_TABLE_COLUMN.Ownership,
+    DATA_TABLE_COLUMN.RemovePlayer
+  ]
 
   useEffect(() => {
     // TODO: this is disgusting
@@ -74,6 +83,54 @@ export default function LineupTable() {
     }
   }
 
+  const rowValueInput = (column, row) => {
+    switch (column.field) {
+      case 'remove':
+        return () => onRemove(row.value.id)
+      case 'roster_slot_id':
+        return row
+      case 'pts':
+        return { row: row.value, projection: useCeiling ? 'ceiling' : 'base' }
+      default:
+        return row.value
+    }
+  }
+
+  const header = () => {
+    return <TableHead>
+      <TableRow >
+        <TableCell
+          colSpan={3}
+          sx={{ paddingBottom: '0px', padding: '2px 6px!important' }}
+        >
+          Remaining: {salaryLeft()}
+        </TableCell>
+        <TableCell
+          align='right'
+          colSpan={3}
+          sx={{ paddingBottom: '0px', padding: '2px 6px!important' }}
+        >
+          <FormControlLabel
+            control={
+              <Checkbox
+                size='small'
+                checked={useCeiling}
+                onChange={() => setUseCeiling(!useCeiling)}
+              />
+            }
+            label='Ceiling'
+            disableTypography
+          />
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        {COLS.map(c => {
+          return <TableCell sx={c.cellStyle}>{c.label}</TableCell>
+        })}
+      </TableRow>
+    </TableHead>
+  }
+
   return (lineup.length > 0 && (
     <TableContainer>
       <Table size='small'>
@@ -104,36 +161,22 @@ export default function LineupTable() {
             </TableCell>
           </TableRow>
           <TableRow>
-            <TableCell sx={{ padding: '2px 6px!important' }}>POS</TableCell>
-            <TableCell sx={{ padding: '2px 6px!important' }}>Player</TableCell>
-            <TableCell sx={{ padding: '2px 6px!important' }}>Pts</TableCell>
-            <TableCell sx={{ padding: '2px 6px!important' }}>pOwn</TableCell>
-            <TableCell sx={{ padding: '2px 6px!important' }}>Sal</TableCell>
-            <TableCell sx={{ padding: '2px 6px!important' }}></TableCell>
+            {COLS.map(c => {
+              return <TableCell sx={c.cellStyle}>{c.label}</TableCell>
+            })}
           </TableRow>
         </TableHead>
         <TableBody>
           {lineup.map((row, i) => {
             return (
               <TableRow key={i}>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{row.label}</TableCell>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.player}</TableCell>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{projectionValue(row.value)}</TableCell>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.ownership}</TableCell>
-                <TableCell sx={{ padding: '2px 6px!important' }}>{row.value?.salary}</TableCell>
-                <TableCell
-                  sx={{ lineHeight: '1px!important', padding: '2px 6px!important' }}
-                >
-                  {row.value?.player && (
-                    <IconButton
-                      color='error'
-                      sx={{ padding: '0px!important', fontSize: '6px!important' }}
-                      onClick={() => onRemove(row.value.id)}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  )}
-                </TableCell>
+                {COLS.map(c => {
+                  return <TableCell
+                    sx={c.cellStyle}
+                  >
+                    {c.valueGetter(rowValueInput(c, row))}
+                  </TableCell>
+                })}
               </TableRow>
             )
           })}
