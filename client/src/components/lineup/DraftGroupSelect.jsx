@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Box, Card, CardContent, Grid, Tab, Tabs, tabsClasses, Typography } from '@mui/material'
+import { Box, Card, CardContent, Tab, Tabs, tabsClasses, Typography } from '@mui/material'
 import toReadableDate from '../../util/toReadableDate'
 import '../../App.css'
 import { setLineupShell } from '../../state/lineup'
@@ -16,6 +16,10 @@ export default function DraftGroupSelect() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
   const { isLoading, loading, done } = useLoading()
   const dispatch = useDispatch()
+
+  // useEffect(() => {
+    // dispatch()
+  // }, [])
 
   useEffect(() => {
     dispatch(setLineupShell(selectedDraftGroup?.type))
@@ -69,7 +73,7 @@ export default function DraftGroupSelect() {
             value={selectedDraftGroupId}
             onChange={onSelect}
             variant='scrollable'
-            scrollButtons
+            scrollButtons='auto'
             sx={{
               [`& .${tabsClasses.scrollButtons}`]: {
                 '&.Mui-disabled': { opacity: 0.3 },

@@ -6,7 +6,6 @@ from app.service.stats_service import *
 from app.service.optimize import *
 from app import app
 
-
 @app.route("/teams", methods=["POST"])
 def teams_post():
     insert_teams()

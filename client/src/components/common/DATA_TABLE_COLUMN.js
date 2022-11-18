@@ -1,8 +1,17 @@
-import { capitalize, IconButton } from "@mui/material"
+import { capitalize } from "@mui/material"
 import { POSITIONS } from "../../state/lineup"
-import CloseIcon from '@mui/icons-material/Close'
+import RemovePlayerButton from "./RemovePlayerButton"
+import ExcludeButton from "./table/ExcludeButton"
+import ExposureInput, { MIN_MAX } from "./table/ExposureInput"
+import LockButton from "./table/LockButton"
 
-const BASE_DATA_TABLE_COLUMN = (field, label = null, sortable = true, customValueGetter = null, cellStyle = { padding: '2px 6px!important' }) => {
+const BASE_DATA_TABLE_COLUMN = (
+  field,
+  label = null,
+  sortable = true,
+  customValueGetter = null,
+  cellStyle = { padding: '2px 6px!important' }
+) => {
   return {
     field: field,
     label: label ? label : capitalize(field),
@@ -32,29 +41,35 @@ export const DATA_TABLE_COLUMN = {
     'remove',
     <></>,
     false,
-    (onClick) => {
-      return <IconButton
-        color='error'
-        sx={{ padding: '0px!important', fontSize: '6px!important' }}
-        onClick={onClick}
-      >
-        <CloseIcon />
-      </IconButton>
-    },
-    { lineHeight: '1px!important', padding: '2px 6px!important' }
+    (row) => <RemovePlayerButton row={row} />
   ),
-  // MaxExposure: BASE_DATA_TABLE_COLUMN(
+  MaxExposure: BASE_DATA_TABLE_COLUMN(
+    'max',
+    'Max',
+    false,
+    (row) => <ExposureInput minMax={MIN_MAX.MAX} player={row} />
+  ),
+  MinExposure: BASE_DATA_TABLE_COLUMN(
+    'min',
+    'Min',
+    false,
+    (row) => <ExposureInput minMax={MIN_MAX.MIN} player={row} />
+  ),
+  Exclude: BASE_DATA_TABLE_COLUMN(
+    'exclude',
+    <></>,
+    false,
+    (row) => <ExcludeButton player={row} />
+  ),
+  Lock: BASE_DATA_TABLE_COLUMN(
+    'lock',
+    <></>,
+    false,
+    (row) => <LockButton player={row} />
+  ),
+  // Boost: BASE_DATA_TABLE_COLUMN(
 
-  // ),
-  // MinExposure: BASE_DATA_TABLE_COLUMN(
-
-  // ),
-  // Exclude: BASE_DATA_TABLE_COLUMN(
-
-  // ),
-  // Lock: BASE_DATA_TABLE_COLUMN(
-
-  // ),
+  // )
 }
 
 export default DATA_TABLE_COLUMN

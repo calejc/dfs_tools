@@ -149,6 +149,12 @@ const draftGroupSlice = createSlice({
       state.filtered = filteredAndSorted
       state.paginated = rowsForCurrPage(filteredAndSorted, state.parameters.page, state.parameters.perPage)
     },
+    updatePlayer(state, action) {
+      const players = state.value.players?.slice()
+      const existing = players.filter(p => p.id === action.payload.id)[0]
+      players[players.indexOf(existing)] = action.payload
+      state.value.players = players
+    }
   },
   extraReducers: createDefaultReducersForAsyncThunk(fetchDraftGroupById)
 })
@@ -161,4 +167,5 @@ export const perPage = (perPage) => draftGroupSlice.actions.perPage(perPage)
 export const showAll = (showAll) => draftGroupSlice.actions.showAll(showAll)
 export const reset = () => draftGroupSlice.actions.reset()
 export const setFiltered = (currLineup) => draftGroupSlice.actions.setFiltered(currLineup)
+export const updatePlayer = (player) => draftGroupSlice.actions.updatePlayer(player)
 export const draftGroupReducer = draftGroupSlice.reducer

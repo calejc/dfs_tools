@@ -8,6 +8,7 @@ import { fetchDraftGroupsData } from './state/draftGroups'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { Route, Routes } from 'react-router-dom'
+import Optimizer from './components/optimizer/Optimizer'
 
 export default function App() {
   const dispatch = useDispatch()
@@ -29,7 +30,7 @@ export default function App() {
       <Container sx={{ height: '100vh', minWidth: '1400px', margin: 'auto' }}>
         <Routes>
           <Route path='/lineup-builder' element={<CreateLineup />} />
-          <Route path='/optimizer' element={<></>} />
+          <Route path='/optimizer' element={<Optimizer />} />
         </Routes>
       </Container>
     </ThemeProvider>

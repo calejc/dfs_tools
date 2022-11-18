@@ -35,6 +35,7 @@ export default function CreateLineup() {
   const isShowdown = () => {
     return selectedDraftGroup?.type === 'showdown'
   }
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -42,9 +43,9 @@ export default function CreateLineup() {
       </Grid>
       <Grid item xs={8}>
         <PlayerTable
-          defaultSort={DATA_TABLE_COLUMN.Salary}
           columns={isShowdown() ? COLUMNS_FOR_SHOWDOWN_GAME_TYPE : COLUMNS_FOR_CLASSIC_GAME_TYPE}
           selectedDraftGroup={selectedDraftGroup}
+          selectedDraftGroupId={selectedDraftGroup.id}
         />
       </Grid>
       <Grid item xs={4}>

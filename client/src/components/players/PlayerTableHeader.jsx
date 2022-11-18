@@ -28,7 +28,7 @@ export default function PlayerTableHeader({ columns }) {
   }
 
   const togglePlayersNotProjected = (e) => {
-    dispatch(showAll(e.target.checked))
+    dispatch(showAll(!e.target.checked))
   }
 
   const draftGroupPositionalTabs = () => {

@@ -76,12 +76,18 @@ const generateShell = (type) => {
   return lineup.slice().sort((a, b) => a.order - b.order)
 }
 
-export const initialState = createInitialState([])
+export const initialState = {
+  ...createInitialState([]),
+  useCeilingProjection: true
+}
 
 const lineupSlice = createSlice({
   name: 'lineup',
   initialState,
   reducers: {
+    setUseCeilingProjection(state, action) {
+      state.useCeilingProjection = action.payload
+    },
     setShell(state, action) {
       state.value = generateShell(action.payload)
     },
@@ -105,6 +111,7 @@ const lineupSlice = createSlice({
   extraReducers: {}
 })
 
+export const setUseCeilingProjection = (useCeiling) => lineupSlice.actions.setUseCeilingProjection(useCeiling)
 export const setLineupShell = (draftGroupType) => lineupSlice.actions.setShell(draftGroupType)
 export const setLineupPlayer = (player) => lineupSlice.actions.setPlayer(player)
 export const removeLineupPlayer = (playerId) => lineupSlice.actions.removePlayer(playerId)

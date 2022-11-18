@@ -159,6 +159,8 @@ class DraftGroupPlayer(db.Model):
     player: str
     team: str
     opp: str
+    max: int
+    min: int
     id: int = db.Column(db.Integer, primary_key=True)
     salary: int = db.Column(db.Integer, nullable=False)
     roster_slot_id: int = db.Column(db.Integer, nullable=False)
@@ -197,6 +199,14 @@ class DraftGroupPlayer(db.Model):
     @property
     def team(self):
         return self._team.dk_abbr
+
+    @property
+    def max(self):
+        return 100
+
+    @property
+    def min(self):
+        return 0
 
     @property
     def opp(self):

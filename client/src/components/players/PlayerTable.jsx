@@ -10,10 +10,9 @@ import PlayerTablePagination from './PlayerTablePagination'
 import { query, reset, setFiltered } from '../../state/draftGroup'
 import { setLineupPlayer } from '../../state/lineup'
 
-
 const TABLE_STYLES = { border: '1px solid rgba(224, 224, 224, 1)', borderRadius: '5px' }
 
-export default function PlayerTable({ columns, selectedDraftGroup }) {
+export default function PlayerTable({ columns, selectedDraftGroup, selectedDraftGroupId }) {
   const dispatch = useDispatch()
   const { status, parameters, paginated } = useSelector(state => state.draftGroup)
   const { isLoading, loading, done } = useLoading()
@@ -35,7 +34,7 @@ export default function PlayerTable({ columns, selectedDraftGroup }) {
 
   useEffect(() => {
     dispatch(reset())
-  }, [selectedDraftGroup])
+  }, [selectedDraftGroupId])
 
   const onPlayerSelect = (player) => {
     dispatch(setLineupPlayer(player))
