@@ -3,6 +3,7 @@ import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt'
 import { IconButton } from '@mui/material'
 import { useDispatch } from 'react-redux'
 import { updatePlayer } from '../../../state/draftGroup'
+import { MIN_MAX } from './ExposureInput'
 
 export default function ExcludeButton({ player }) {
   const dispatch = useDispatch()

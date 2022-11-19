@@ -1,14 +1,22 @@
 import { Grid, Tab, Tabs } from '@mui/material'
 import React from 'react'
+import { useEffect } from 'react'
 import { useState } from 'react'
-import { useSelector } from 'react-redux'
-import DATA_TABLE_COLUMN from '../common/DATA_TABLE_COLUMN'
-import DraftGroupSelect from '../lineup/DraftGroupSelect'
+import { useDispatch, useSelector } from 'react-redux'
+import { clearDraftGroup } from '../../state/draftGroup'
+import DATA_TABLE_COLUMN from '../common/table/DATA_TABLE_COLUMN'
+import DraftGroupSelect from '../common/DraftGroupSelect'
 import PlayerTable from '../players/PlayerTable'
+import OptimizerSettings from './OptimizerSettings'
 
 export default function Optimizer() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
+  const dispatch = useDispatch()
   const [tab, setTab] = useState(0)
+
+  useEffect(() => {
+    dispatch(clearDraftGroup())
+  }, [])
 
   const COLUMNS = [
     DATA_TABLE_COLUMN.Position,
@@ -27,6 +35,17 @@ export default function Optimizer() {
     DATA_TABLE_COLUMN.Lock
   ]
 
+  const tabContent = () => {
+    if (tab === 0) {
+      return <PlayerTable
+        columns={COLUMNS}
+        selectedDraftGroup={selectedDraftGroup}
+      />
+    } else {
+      return <OptimizerSettings />
+    }
+  }
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -37,12 +56,7 @@ export default function Optimizer() {
           <Tab label='Pool' />
           <Tab label='Settings' />
         </Tabs>
-        {tab === 0 &&
-          <PlayerTable
-          columns={COLUMNS}
-          selectedDraftGroup={selectedDraftGroup}
-          />
-        }
+        {tabContent()}
       </Grid>
     </Grid>
   )

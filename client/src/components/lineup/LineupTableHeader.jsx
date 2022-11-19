@@ -34,8 +34,12 @@ export default function LineupTableHeader({ columns, useCeiling, salaryLeft }) {
       </TableCell>
     </TableRow>
     <TableRow>
-      {columns.map(c => {
-        return <TableCell sx={c.cellStyle}>{c.label}</TableCell>
+      {columns.map((c, i) => {
+        return <TableCell
+          key={i}
+          sx={c.cellStyle}>
+          {c.label}
+        </TableCell>
       })}
     </TableRow>
   </>

@@ -40,18 +40,18 @@ export default function DataTable({ columns, data, header, footer, tableStyle, o
           {header}
         </TableHead>
         <TableBody>
-          {data.map(row => {
+          {data.map((row, i) => {
             return (
               <TableRow
                 hover
-                key={row.id}
+                key={i}
                 sx={styles()}
                 onClick={() => click(row)}
               >
-                {columns.map(col => {
+                {columns.map((col, i) => {
                   return (
                     <TableCell
-                      key={col.label}
+                      key={i}
                       sx={col.cellStyle}
                     >
                       {col.valueGetter(isLineupTable ? rowValueInput(col, row) : row)}

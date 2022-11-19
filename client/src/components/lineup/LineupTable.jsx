@@ -1,9 +1,9 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import prettifyDollarValue from '../../util/prettifyDollarValue'
-import DATA_TABLE_COLUMN from '../common/DATA_TABLE_COLUMN'
+import DATA_TABLE_COLUMN from '../common/table/DATA_TABLE_COLUMN'
 import LineupTableFooter from './LineupTableFooter'
-import DataTable from '../common/DataTable'
+import DataTable from '../common/table/DataTable'
 import LineupTableHeader from './LineupTableHeader'
 
 export default function LineupTable() {

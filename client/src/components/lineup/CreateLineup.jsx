@@ -1,13 +1,20 @@
 import React from 'react'
-import DraftGroupSelect from './DraftGroupSelect'
+import DraftGroupSelect from '../common/DraftGroupSelect'
 import PlayerTable from '../players/PlayerTable'
 import { Grid } from '@mui/material'
 import LineupTable from './LineupTable'
-import { useSelector } from 'react-redux'
-import DATA_TABLE_COLUMN from '../common/DATA_TABLE_COLUMN'
+import { useDispatch, useSelector } from 'react-redux'
+import DATA_TABLE_COLUMN from '../common/table/DATA_TABLE_COLUMN'
+import { useEffect } from 'react'
+import { clearDraftGroup } from '../../state/draftGroup'
 
 export default function CreateLineup() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(clearDraftGroup())
+  }, [])
 
   const BASE_COLUMN_SET = [
     DATA_TABLE_COLUMN.Position,

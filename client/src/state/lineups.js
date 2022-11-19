@@ -1,38 +1,80 @@
-// Optimized lineups
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+import postOptimize from "../api/postOptimize"
+import createDefaultReducersForAsyncThunk from "./apiBased/createDefaultReducersForAsyncThunk"
+import createInitialState from "./apiBased/createInitialState"
 
-
-export const OPTO_QUERY_PARAMETERS = {
-  Query: {
-    name: 'query',
-    default: '',
+export const DEFAULT_STACK_OPTIONS = {
+  WithQB: {
+    WR: 0,
+    RB: 0,
+    TE: 0,
+    FLEX: 0
   },
-  Position: {
-    name: 'position',
-    default: 0,
-  },
-  SortBy: {
-    name: 'sortBy',
-    default: 'salary',
-  },
-  SortDir: {
-    name: 'sortDir',
-    default: SORT_DIR.DESCENDING,
-  },
-  Page: {
-    name: 'page',
-    default: 0,
-  },
-  PerPage: {
-    name: 'perPage',
-    default: 20,
-  },
-  ShowAll: {
-    name: 'showAll',
-    default: false,
+  Opp: {
+    WR: 0,
+    RB: 0,
+    TE: 0,
+    FLEX: 0
   }
 }
 
-
-export const OPTO_SETTINGS = {
-
+export const DEFAULT_FLEX_POSITIONS = {
+  RB: true,
+  WR: true,
+  TE: true
 }
+
+export const OPTIMIZER_CONSTRAINTS = {
+  TotalLineups: {
+    name: 'count',
+    default: 150
+  },
+  Unique: {
+    name: 'unique',
+    default: 2
+  },
+  MaxPerTeam: {
+    name: 'max_per_team',
+    default: 4
+  },
+  FlexPositions: {
+    name: 'flex_positions',
+    default: DEFAULT_FLEX_POSITIONS
+  },
+  Stack: {
+    name: 'stack',
+    default: DEFAULT_STACK_OPTIONS
+  }
+}
+
+const initialConstraints = () => {
+  let params = {}
+  Object.keys(OPTIMIZER_CONSTRAINTS).forEach(p => {
+    Object.assign(params, { [OPTIMIZER_CONSTRAINTS[p].name]: OPTIMIZER_CONSTRAINTS[p].default })
+  })
+  return params
+}
+
+export const initialState = {
+  ...createInitialState([]),
+  settings: initialConstraints()
+}
+
+export const optimizeLineups = createAsyncThunk(
+  'fetchOptimizedLineups',
+  async (data) => await postOptimize(data)
+)
+
+const lineupsSlice = createSlice({
+  name: 'lineups',
+  initialState,
+  reducers: {
+    updateConstraints(state, action) {
+      state.settings = action.payload
+    }
+  },
+  extraReducers: createDefaultReducersForAsyncThunk(optimizeLineups)
+})
+
+export const updateConstraints = (constraints) => lineupsSlice.actions.updateConstraints(constraints)
+export const lineupsReducer = lineupsSlice.reducer

@@ -2,7 +2,7 @@ import { IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import React from 'react'
 import { useDispatch } from 'react-redux'
-import { removeLineupPlayer } from '../../state/lineup'
+import { removeLineupPlayer } from '../../../state/lineup'
 
 export default function RemovePlayerButton({ row }) {
   const dispatch = useDispatch()

@@ -3,6 +3,7 @@ import getDraftGroupById from "../api/getDraftGroupById"
 import { SORT_DIR } from "../shared/CONSTANTS"
 import createDefaultReducersForAsyncThunk from "./apiBased/createDefaultReducersForAsyncThunk"
 import createInitialState from "./apiBased/createInitialState"
+import REQUEST_STATUS from "./apiBased/REQUEST_STATUS"
 
 export const PARAMETERS = {
   Query: {
@@ -154,6 +155,12 @@ const draftGroupSlice = createSlice({
       const existing = players.filter(p => p.id === action.payload.id)[0]
       players[players.indexOf(existing)] = action.payload
       state.value.players = players
+    },
+    clearDraftGroup(state) {
+      state.value = {}
+      state.filtered = []
+      state.paginated = []
+      state.status = REQUEST_STATUS.NOT_STARTED
     }
   },
   extraReducers: createDefaultReducersForAsyncThunk(fetchDraftGroupById)
@@ -168,4 +175,5 @@ export const showAll = (showAll) => draftGroupSlice.actions.showAll(showAll)
 export const reset = () => draftGroupSlice.actions.reset()
 export const setFiltered = (currLineup) => draftGroupSlice.actions.setFiltered(currLineup)
 export const updatePlayer = (player) => draftGroupSlice.actions.updatePlayer(player)
+export const clearDraftGroup = () => draftGroupSlice.actions.clearDraftGroup()
 export const draftGroupReducer = draftGroupSlice.reducer

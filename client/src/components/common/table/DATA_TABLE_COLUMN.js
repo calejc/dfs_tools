@@ -1,9 +1,9 @@
 import { capitalize } from "@mui/material"
-import { POSITIONS } from "../../state/lineup"
+import { POSITIONS } from "../../../state/lineup"
+import ExcludeButton from "./ExcludeButton"
+import ExposureInput, { MIN_MAX } from "./ExposureInput"
+import LockButton from "./LockButton"
 import RemovePlayerButton from "./RemovePlayerButton"
-import ExcludeButton from "./table/ExcludeButton"
-import ExposureInput, { MIN_MAX } from "./table/ExposureInput"
-import LockButton from "./table/LockButton"
 
 const BASE_DATA_TABLE_COLUMN = (
   field,

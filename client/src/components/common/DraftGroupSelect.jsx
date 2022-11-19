@@ -4,11 +4,11 @@ import { Box, Card, CardContent, Tab, Tabs, tabsClasses, Typography } from '@mui
 import toReadableDate from '../../util/toReadableDate'
 import '../../App.css'
 import { setLineupShell } from '../../state/lineup'
-import SubHeader from '../common/SubHeader'
+import SubHeader from './SubHeader'
 import { fetchDraftGroupById } from '../../state/draftGroup'
 import useLoading from '../../hooks/useLoading'
 import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
-import LoadingBox from '../common/LoadingBox'
+import LoadingBox from './LoadingBox'
 
 export default function DraftGroupSelect() {
   const [selectedDraftGroupId, setSelectedDraftGroupId] = useState()
@@ -16,10 +16,6 @@ export default function DraftGroupSelect() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
   const { isLoading, loading, done } = useLoading()
   const dispatch = useDispatch()
-
-  // useEffect(() => {
-    // dispatch()
-  // }, [])
 
   useEffect(() => {
     dispatch(setLineupShell(selectedDraftGroup?.type))
@@ -70,7 +66,7 @@ export default function DraftGroupSelect() {
           sx={{ mt: '50px' }}
         >
           <Tabs
-            value={selectedDraftGroupId}
+            value={selectedDraftGroupId ? selectedDraftGroupId : false}
             onChange={onSelect}
             variant='scrollable'
             scrollButtons='auto'
