@@ -8,13 +8,15 @@ export const DEFAULT_STACK_OPTIONS = {
     WR: 0,
     RB: 0,
     TE: 0,
-    FLEX: 0
+    FLEX: 0,
+    WRTE: 0
   },
   Opp: {
     WR: 0,
     RB: 0,
     TE: 0,
-    FLEX: 0
+    FLEX: 0,
+    WRTE: 0
   }
 }
 

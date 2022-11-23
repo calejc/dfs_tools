@@ -47,7 +47,7 @@ def optimize():
         }
         for p in db.session.query(DraftGroupPlayer)
         .filter(
-            DraftGroupPlayer.draft_group_id == 77210,
+            DraftGroupPlayer.draft_group_id == 77710,
             DraftGroupPlayer.roster_slot_id != 70,
         )
         .all()
@@ -57,30 +57,30 @@ def optimize():
     model = LpProblem(name="testing", sense=LpMaximize)
 
     # force double stack
-    # for qb in [p for p in players if players[p]["pos"] == 66]:
-    #     model += (
-    #         lpSum(
-    #             [
-    #                 player_vars[i]
-    #                 for i, data in players.items()
-    #                 if data["team"] == players[qb]["team"] and data["pos"] != 71
-    #             ]
-    #             + [-3 * player_vars[qb]]
-    #         )
-    #         >= 0
-    #     )
+    for qb in [p for p in players if players[p]["pos"] == 66]:
+        model += (
+            lpSum(
+                [
+                    player_vars[i]
+                    for i, data in players.items()
+                    if data["team"] == players[qb]["team"] and data["pos"] != 71
+                ]
+                + [-3 * player_vars[qb]]
+            )
+            >= 0
+        )
 
-    #     model += (
-    #         lpSum(
-    #             [
-    #                 player_vars[i]
-    #                 for i, data in players.items()
-    #                 if data["team"] == players[qb]["opp"] and data["pos"] != 71
-    #             ]
-    #             + [-1 * player_vars[qb]]
-    #         )
-    #         >= 0
-    #     )
+        model += (
+            lpSum(
+                [
+                    player_vars[i]
+                    for i, data in players.items()
+                    if data["team"] == players[qb]["opp"] and data["pos"] != 71
+                ]
+                + [-1 * player_vars[qb]]
+            )
+            >= 0
+        )
 
     model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
     model += (
@@ -206,9 +206,9 @@ def optimize():
     #         <= 1
     #     )
 
-    model += (
-        lpSum(player_vars[25194822]) == 1
-    )
+    # model += (
+    #     lpSum(player_vars[25194822]) == 1
+    # )
 
     # model += (
     #     lpSum(
