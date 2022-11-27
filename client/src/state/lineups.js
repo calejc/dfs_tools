@@ -5,15 +5,15 @@ import createInitialState from "./apiBased/createInitialState"
 
 export const DEFAULT_STACK_OPTIONS = {
   WithQB: {
-    WR: 0,
     RB: 0,
+    WR: 0,
     TE: 0,
     FLEX: 0,
     WRTE: 0
   },
   Opp: {
-    WR: 0,
     RB: 0,
+    WR: 0,
     TE: 0,
     FLEX: 0,
     WRTE: 0
@@ -64,7 +64,10 @@ export const initialState = {
 
 export const optimizeLineups = createAsyncThunk(
   'fetchOptimizedLineups',
-  async (data) => await postOptimize(data)
+  async (_, { getState }) => await postOptimize(
+    getState().draftGroup.value.id,
+    getState().lineups.settings
+  )
 )
 
 const lineupsSlice = createSlice({

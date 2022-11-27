@@ -1,4 +1,4 @@
-import { Grid, Tab, Tabs } from '@mui/material'
+import { Button, Grid, Tab, Tabs } from '@mui/material'
 import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
@@ -8,15 +8,22 @@ import DATA_TABLE_COLUMN from '../common/table/DATA_TABLE_COLUMN'
 import DraftGroupSelect from '../common/DraftGroupSelect'
 import PlayerTable from '../players/PlayerTable'
 import OptimizerSettings from './OptimizerSettings'
+import { optimizeLineups } from '../../state/lineups'
+import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
 
 export default function Optimizer() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
+  const { status: status } = useSelector(state => state.lineups)
   const dispatch = useDispatch()
   const [tab, setTab] = useState(0)
 
   useEffect(() => {
     dispatch(clearDraftGroup())
   }, [])
+
+  const onRun = () => {
+    dispatch(optimizeLineups())
+  }
 
   const COLUMNS = [
     DATA_TABLE_COLUMN.Position,
@@ -46,16 +53,40 @@ export default function Optimizer() {
     }
   }
 
+  const showResultsTab = () => {
+    return status !== REQUEST_STATUS.NOT_STARTED
+  }
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <DraftGroupSelect />
       </Grid>
-      <Grid item xs={12}>
-        <Tabs value={tab} onChange={(e, i) => setTab(i)}>
-          <Tab label='Pool' />
-          <Tab label='Settings' />
-        </Tabs>
+      <Grid item xs={12} container>
+        <Grid item xs={6}>
+          <Tabs value={tab} onChange={(e, i) => setTab(i)}>
+            <Tab label='Pool' />
+            <Tab label='Settings' />
+            {showResultsTab && <Tab label='Results' />}
+          </Tabs>
+        </Grid>
+        <Grid
+          item
+          xs={6}
+          container
+          direction='row'
+          justifyContent='flex-end'
+          sx={{ paddingRight: '20px' }}
+        >
+          <Grid item>
+            <Button
+              variant='outlined'
+              onClick={onRun}
+            >
+              Run
+            </Button>
+          </Grid>
+        </Grid>
         {tabContent()}
       </Grid>
     </Grid>

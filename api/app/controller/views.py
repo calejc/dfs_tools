@@ -4,7 +4,13 @@ from app.service.team_service import *
 from app.service.draftkings_service import *
 from app.service.stats_service import *
 from app.service.optimize import *
+from app.model.models import (
+    OptimizerStackOption,
+    OptimizerStackOptions,
+    OptimizerConstraintsModel,
+)
 from app import app
+
 
 @app.route("/teams", methods=["POST"])
 def teams_post():
@@ -38,7 +44,8 @@ def fetch_new_draft_groups():
     extract_slates()
     return {}
 
-@app.route('/draft-group/<dgid>')
+
+@app.route("/draft-group/<dgid>")
 def get_draft_group_with_players(dgid):
     return jsonify(get_draft_group_players(dgid))
 
@@ -48,7 +55,33 @@ def get_upcoming_draft_groups():
     return jsonify(get_draft_groups())
 
 
-@app.route('/optimize')
+@app.route("/optimize", methods=["POST"])
 def run_optimizer():
-    optimize()
+    data = request.json["data"]
+    stack = data["stack"]
+    optimize(
+        OptimizerConstraintsModel(
+            draft_group_id=request.args["draftGroup"],
+            count=data["count"],
+            unique=data["unique"],
+            max_per_team=data["max_per_team"],
+            flex=data["flex_positions"],
+            stack=OptimizerStackOptions(
+                with_qb=OptimizerStackOption(
+                    stack["WithQB"]["RB"],
+                    stack["WithQB"]["WR"],
+                    stack["WithQB"]["TE"],
+                    stack["WithQB"]["FLEX"],
+                    stack["WithQB"]["WRTE"],
+                ),
+                opp=OptimizerStackOption(
+                    stack["Opp"]["RB"],
+                    stack["Opp"]["WR"],
+                    stack["Opp"]["TE"],
+                    stack["Opp"]["FLEX"],
+                    stack["Opp"]["WRTE"],
+                ),
+            ),
+        )
+    )
     return {}

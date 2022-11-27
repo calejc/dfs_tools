@@ -189,7 +189,7 @@ class DraftGroupPlayer(db.Model):
     median = avg_column_property(id, Projection.median, 2)
     value = avg_column_property(id, Projection.value, 2)
     ownership = avg_column_property(
-        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
+        id, Projection.ownership, 3
     )
     boom = avg_column_property(id, Projection.boom, 3)
     optimal = avg_column_property(id, Projection.optimal, 3)
@@ -240,3 +240,54 @@ class DraftGroup(db.Model):
             "games": self.games if eager_fetch else len(self.games),
             "players": self.players if eager_fetch else [],
         }
+
+
+##############################
+#  API Models for Optimizer  #
+##############################
+class OptimizerStackOption:
+    def __init__(self, rb: int, wr: int, te: int, flex: int, wrte: int):
+        self.rb = rb
+        self.wr = wr
+        self.te = te
+        self.flex = flex
+        self.wrte = wrte
+
+    def stacking(self):
+        return any(c != 0 for c in [self.rb, self.wr, self.te, self.flex, self.wrte])
+
+    def stacked_positions(self):
+        return {k: v for k, v in vars(self).items() if v != 0}
+
+
+class OptimizerStackOptions:
+    def __init__(self, with_qb: OptimizerStackOption, opp: OptimizerStackOption):
+        self.with_qb = with_qb
+        self.opp = opp
+
+
+class OptimizerConstraintsModel:
+    def __init__(
+        self,
+        draft_group_id: int,
+        count: int,
+        unique: int,
+        max_per_team: int,
+        flex: list,
+        stack: OptimizerStackOptions,
+    ):
+        self.draft_group_id = draft_group_id
+        self.count = count
+        self.unique = unique
+        self.max_per_team = max_per_team
+        self.flex = flex
+        self.stack = stack
+
+    def max_rb(self):
+        return 3 if self.flex["RB"] is True else 2
+
+    def max_wr(self):
+        return 4 if self.flex["WR"] is True else 3
+
+    def max_te(self):
+        return 2 if self.flex["TE"] is True else 1

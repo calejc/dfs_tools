@@ -33,10 +33,24 @@ def summary(prob):
     print("{} = {}".format(score_pretty, eval(score)))
 
 
-def optimize():
+def pos_to_roster_slots(pos):
+    if pos == "rb":
+        return [67]
+    elif pos == "wr":
+        return [68]
+    elif pos == "te":
+        return [69]
+    elif pos == "flex":
+        return [67, 68, 69]
+    elif pos == "wrte":
+        return [68, 69]
+
+
+def optimize(constraints: OptimizerConstraintsModel):
     SALARY_CAP = 50000
     POSITIONAL_CONSTRAINTS = {66: 1, 67: 2, 68: 3, 69: 1, 71: 1}
     FLEX = [67, 68, 69]
+    print(constraints.draft_group_id)
     players = {
         p.id: {
             "sal": p.salary,
@@ -47,40 +61,45 @@ def optimize():
         }
         for p in db.session.query(DraftGroupPlayer)
         .filter(
-            DraftGroupPlayer.draft_group_id == 77710,
+            DraftGroupPlayer.draft_group_id == constraints.draft_group_id,
             DraftGroupPlayer.roster_slot_id != 70,
         )
         .all()
         if p.ceiling is not None
     }
     player_vars = LpVariable.dicts("player", players.keys(), cat="Binary")
-    model = LpProblem(name="testing", sense=LpMaximize)
+    model = LpProblem(name="optimize", sense=LpMaximize)
 
-    # force double stack
-    for qb in [p for p in players if players[p]["pos"] == 66]:
-        model += (
-            lpSum(
-                [
-                    player_vars[i]
-                    for i, data in players.items()
-                    if data["team"] == players[qb]["team"] and data["pos"] != 71
-                ]
-                + [-3 * player_vars[qb]]
-            )
-            >= 0
-        )
-
-        model += (
-            lpSum(
-                [
-                    player_vars[i]
-                    for i, data in players.items()
-                    if data["team"] == players[qb]["opp"] and data["pos"] != 71
-                ]
-                + [-1 * player_vars[qb]]
-            )
-            >= 0
-        )
+    if constraints.stack.with_qb.stacking() or constraints.stack.opp.stacking():
+        for qb in [p for p in players if players[p]["pos"] == 66]:
+            for pos, count in constraints.stack.with_qb.stacked_positions().items():
+                c = count * -1
+                model += (
+                    lpSum(
+                        [
+                            player_vars[i]
+                            for i, data in players.items()
+                            if data["team"] == players[qb]["team"]
+                            and data["pos"] in pos_to_roster_slots(pos)
+                        ]
+                        + [c * player_vars[qb]]
+                    )
+                    >= 0
+                )
+            for pos, count in constraints.stack.opp.stacked_positions().items():
+                c = count * -1
+                model += (
+                    lpSum(
+                        [
+                            player_vars[i]
+                            for i, data in players.items()
+                            if data["team"] == players[qb]["opp"]
+                            and data["pos"] in pos_to_roster_slots(pos)
+                        ]
+                        + [c * player_vars[qb]]
+                    )
+                    >= 0
+                )
 
     model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
     model += (
@@ -107,7 +126,7 @@ def optimize():
                 if player_data["pos"] == 67
             ]
         )
-        <= 2
+        <= 3
     )
 
     # WR

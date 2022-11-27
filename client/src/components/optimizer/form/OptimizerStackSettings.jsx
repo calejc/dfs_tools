@@ -1,16 +1,11 @@
 import { FormControl, FormControlLabel, FormGroup, FormLabel, Grid, Input, TextField } from '@mui/material'
 import React from 'react'
-import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateConstraints } from '../../../state/lineups'
 
 export default function OptimizerStackSettings() {
   const constraints = useSelector(state => state.lineups.settings)
   const dispatch = useDispatch()
-
-  useEffect(() => {
-    console.log(constraints.stack)
-  }, [constraints])
 
   const onChange = (e) => {
     if (e.target.name.startsWith('Opp-')) {

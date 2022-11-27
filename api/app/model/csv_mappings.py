@@ -91,23 +91,28 @@ class Columns:
                 PlayerEntity.position == position,
             )
 
-    def get_team_id_subquery():
-        # TODO: placeholder, will need to query DST entities based on name or something. For now, RTS and ETR have the dk slate ID
-        pass
+    def get_team_id_subquery(self, row, db_session):
+        t = row["team"]
+        team = db_session.query(TeamEntity).filter(TeamEntity.dk_abbr == t)
+        team_id = db_session.query(TeamEntity.dk_id).filter(
+            TeamEntity.dk_abbr == row["team"]
+        )
+        print("{} | {} -- {}".format(team_id, t, team))
+        return team_id
 
     def get_draft_group_players(self, row, draft_group_id, db_session):
-        if row.get(self.position, None) == "DST":
+        if self.get_position(row) == "DST":
             return (
                 db_session.query(DraftGroupPlayer).filter(
                     DraftGroupPlayer.id == row.get(self.draft_group_player_id, None)
                 )
                 if self.draft_group_player_id
-                and row.get(self.draft_group_player_id, None)
+                and row.get(self.draft_group_player_id, None) != None
                 else db_session.query(DraftGroupPlayer)
                 .filter(
                     DraftGroupPlayer.draft_group_id == draft_group_id,
                     DraftGroupPlayer.roster_slot_id == 71,
-                    DraftGroupPlayer.player_id
+                    DraftGroupPlayer.team_id
                     == self.get_team_id_subquery(row, db_session),
                 )
                 .first()
@@ -207,6 +212,11 @@ class RunTheSimsColumns(Columns):
                     row.get("Optimal Rate", None),
                 ],
             )
+        )
+
+    def get_team_id_subquery(self, row, db_session):
+        return db_session.query(TeamEntity.dk_id).filter(
+            TeamEntity.nickname == row["team"]
         )
 
 
