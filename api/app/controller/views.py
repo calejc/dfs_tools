@@ -59,7 +59,7 @@ def get_upcoming_draft_groups():
 def run_optimizer():
     data = request.json["data"]
     stack = data["stack"]
-    optimize(
+    lineups = optimize(
         OptimizerConstraintsModel(
             draft_group_id=request.args["draftGroup"],
             count=data["count"],
@@ -84,4 +84,4 @@ def run_optimizer():
             ),
         )
     )
-    return {}
+    return jsonify(lineups)

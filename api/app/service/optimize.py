@@ -1,36 +1,54 @@
-import re
 from pulp import LpMaximize, LpProblem, lpSum, LpVariable, LpStatus
 from app.model.models import *
-from app import app
 
 
-def summary(prob):
-    div = "---------------------------------------\n"
-    print(LpStatus[prob.status])
-    print(div)
-    print("Variables:\n")
-    score = str(prob.objective)
-    constraints = [str(const) for const in prob.constraints.values()]
-    for v in prob.variables():
-        score = score.replace(v.name, str(v.varValue))
-        constraints = [const.replace(v.name, str(v.varValue)) for const in constraints]
-        if v.varValue != 0:
-            print(
-                db.session.query(DraftGroupPlayer)
-                .filter(DraftGroupPlayer.id == v.name.split("_")[1])
-                .first()
-                .player
-            )
-    print(div)
-    print("Constraints:")
-    for constraint in constraints:
-        constraint_pretty = " + ".join(re.findall("[0-9\.]*\*1.0", constraint))
-        if constraint_pretty != "":
-            print("{} = {}".format(constraint_pretty, eval(constraint_pretty)))
-    print(div)
-    print("Score:")
-    score_pretty = " + ".join(re.findall("[0-9\.]+\*1.0", score))
-    print("{} = {}".format(score_pretty, eval(score)))
+def query_player(player_var):
+    return (
+        db.session.query(DraftGroupPlayer)
+        .filter(DraftGroupPlayer.id == player_var.name.split("_")[1])
+        .first()
+    )
+
+
+def determine_flex_player(lineup):
+    rbs = []
+    wrs = []
+    tes = []
+    for p in lineup:
+        if p.roster_slot_id == 67:
+            rbs.append(p)
+        elif p.roster_slot_id == 68:
+            wrs.append(p)
+        elif p.roster_slot_id == 69:
+            tes.append(p)
+
+    flex = None
+    if len(rbs) == 3:
+        flex = 67
+    elif len(wrs) == 4:
+        flex = 68
+    elif len(tes) == 2:
+        flex = 69
+    return max(
+        [p for p in lineup if p.roster_slot_id == flex],
+        key=lambda x: x.game_time,
+    )
+
+
+def to_lineup(model):
+    lineup = [query_player(p) for p in model.variables() if p.varValue > 0]
+    flex_player = determine_flex_player(lineup)
+
+    # TODO: disgusting, find a better way to get players in the correct lineup order
+    sorted_lineup = []
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == 66]
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == 67 and p != flex_player]
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == 68 and p != flex_player]
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == 69 and p != flex_player]
+    sorted_lineup += [flex_player]
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == 71]
+
+    return sorted_lineup
 
 
 def pos_to_roster_slots(pos):
@@ -48,9 +66,6 @@ def pos_to_roster_slots(pos):
 
 def optimize(constraints: OptimizerConstraintsModel):
     SALARY_CAP = 50000
-    POSITIONAL_CONSTRAINTS = {66: 1, 67: 2, 68: 3, 69: 1, 71: 1}
-    FLEX = [67, 68, 69]
-    print(constraints.draft_group_id)
     players = {
         p.id: {
             "sal": p.salary,
@@ -60,10 +75,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             "opp": p.opp,
         }
         for p in db.session.query(DraftGroupPlayer)
-        .filter(
-            DraftGroupPlayer.draft_group_id == constraints.draft_group_id,
-            DraftGroupPlayer.roster_slot_id != 70,
-        )
+        .filter(DraftGroupPlayer.draft_group_id == constraints.draft_group_id)
         .all()
         if p.ceiling is not None
     }
@@ -116,7 +128,7 @@ def optimize(constraints: OptimizerConstraintsModel):
                 if player_data["pos"] == 67
             ]
         )
-        >= 2
+        >= constraints.min_rb
     )
     model += (
         lpSum(
@@ -126,7 +138,7 @@ def optimize(constraints: OptimizerConstraintsModel):
                 if player_data["pos"] == 67
             ]
         )
-        <= 3
+        <= constraints.max_rb
     )
 
     # WR
@@ -138,7 +150,7 @@ def optimize(constraints: OptimizerConstraintsModel):
                 if player_data["pos"] == 68
             ]
         )
-        >= 3
+        >= constraints.min_wr
     )
     model += (
         lpSum(
@@ -148,13 +160,10 @@ def optimize(constraints: OptimizerConstraintsModel):
                 if player_data["pos"] == 68
             ]
         )
-        <= 4
+        <= constraints.max_wr
     )
 
     # TE
-    # teSum = [
-    # player_vars[p] for p, player_data in players.items() if player_data["pos"] == 69
-    # ]
     model += (
         lpSum(
             [
@@ -163,18 +172,18 @@ def optimize(constraints: OptimizerConstraintsModel):
                 if player_data["pos"] == 69
             ]
         )
-        == 1
+        == constraints.min_te
     )
-    # model += (
-    #     lpSum(
-    #         [
-    #             player_vars[p]
-    #             for p, player_data in players.items()
-    #             if player_data["pos"] == 69
-    #         ]
-    #     )
-    #     <= 2
-    # )
+    model += (
+        lpSum(
+            [
+                player_vars[p]
+                for p, player_data in players.items()
+                if player_data["pos"] == 69
+            ]
+        )
+        <= constraints.max_te
+    )
 
     # QB
     model += (
@@ -225,24 +234,17 @@ def optimize(constraints: OptimizerConstraintsModel):
     #         <= 1
     #     )
 
-    # model += (
-    #     lpSum(player_vars[25194822]) == 1
-    # )
+    lineups = []
+    for _ in range(constraints.count):
+        model.solve()
+        model += (
+            lpSum(
+                player_vars[int(p.name.split("_")[1])]
+                for p in model.variables()
+                if p.varValue > 0
+            )
+            <= 8
+        )
+        lineups.append(to_lineup(model))
 
-    # model += (
-    #     lpSum(
-    #         [
-    #             player_vars[p]
-    #             for p, player_data in players.items()
-    #             if player_data["sal"] == 3000
-    #         ]
-    #     )
-    #     == 0
-    # )
-    # model += (
-    #     lpSum(player_vars[25195120])
-    #     == 0
-    # )
-
-    model.solve()
-    summary(model)
+    return lineups

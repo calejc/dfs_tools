@@ -189,7 +189,7 @@ class DraftGroupPlayer(db.Model):
     median = avg_column_property(id, Projection.median, 2)
     value = avg_column_property(id, Projection.value, 2)
     ownership = avg_column_property(
-        id, Projection.ownership, 3
+        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
     )
     boom = avg_column_property(id, Projection.boom, 3)
     optimal = avg_column_property(id, Projection.optimal, 3)
@@ -207,6 +207,10 @@ class DraftGroupPlayer(db.Model):
     @property
     def min(self):
         return 0
+
+    @property
+    def game_time(self):
+        return self._game.start
 
     @property
     def opp(self):
@@ -283,11 +287,26 @@ class OptimizerConstraintsModel:
         self.flex = flex
         self.stack = stack
 
+    @property
+    def min_rb(self):
+        return 2
+
+    @property
     def max_rb(self):
         return 3 if self.flex["RB"] is True else 2
 
+    @property
+    def min_wr(self):
+        return 3
+
+    @property
     def max_wr(self):
         return 4 if self.flex["WR"] is True else 3
 
+    @property
+    def min_te(self):
+        return 1
+
+    @property
     def max_te(self):
         return 2 if self.flex["TE"] is True else 1

@@ -10,12 +10,19 @@ import PlayerTable from '../players/PlayerTable'
 import OptimizerSettings from './OptimizerSettings'
 import { optimizeLineups } from '../../state/lineups'
 import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
+import OptimizerResults from './OptimizerResults'
 
 export default function Optimizer() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
-  const { status: status } = useSelector(state => state.lineups)
+  const { value: lineups, status: status } = useSelector(state => state.lineups)
   const dispatch = useDispatch()
   const [tab, setTab] = useState(0)
+
+  useEffect(() => {
+    if (status == REQUEST_STATUS.SUCCEEDED) {
+      setTab(2)
+    }
+  }, [lineups])
 
   useEffect(() => {
     dispatch(clearDraftGroup())
@@ -43,13 +50,16 @@ export default function Optimizer() {
   ]
 
   const tabContent = () => {
-    if (tab === 0) {
-      return <PlayerTable
-        columns={COLUMNS}
-        selectedDraftGroup={selectedDraftGroup}
-      />
-    } else {
-      return <OptimizerSettings />
+    switch (tab) {
+      case 0:
+        return <PlayerTable
+          columns={COLUMNS}
+          selectedDraftGroup={selectedDraftGroup}
+        />
+      case 1:
+        return <OptimizerSettings />
+      case 2:
+        return <OptimizerResults />
     }
   }
 

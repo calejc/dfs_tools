@@ -6,9 +6,9 @@ import { lineupsReducer } from './lineups'
 
 export const reducer = {
   draftGroups: draftGroupsReducer,
-  lineup: lineupReducer,
   draftGroup: draftGroupReducer,
-  lineups: lineupsReducer
+  lineups: lineupsReducer,
+  lineup: lineupReducer
 }
 
 export default configureStore({ reducer })
