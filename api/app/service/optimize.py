@@ -1,5 +1,14 @@
 from pulp import LpMaximize, LpProblem, lpSum, LpVariable, LpStatus
 from app.model.models import *
+from app.model.draftkings_api_constants import (
+    QB_ROSTER_SLOT_ID,
+    RB_ROSTER_SLOT_ID,
+    WR_ROSTER_SLOT_ID,
+    TE_ROSTER_SLOT_ID,
+    DST_ROSTER_SLOT_ID,
+    SD_CPT_ROSTER_SLOT_ID,
+    SD_FLEX_ROSTER_SLOT_ID,
+)
 
 
 def query_player(player_var):
@@ -15,11 +24,11 @@ def determine_flex_player(lineup):
     wrs = []
     tes = []
     for p in lineup:
-        if p.roster_slot_id == 67:
+        if p.roster_slot_id == RB_ROSTER_SLOT_ID:
             rbs.append(p)
-        elif p.roster_slot_id == 68:
+        elif p.roster_slot_id == WR_ROSTER_SLOT_ID:
             wrs.append(p)
-        elif p.roster_slot_id == 69:
+        elif p.roster_slot_id == TE_ROSTER_SLOT_ID:
             tes.append(p)
 
     flex = None
@@ -41,27 +50,33 @@ def to_lineup(model):
 
     # TODO: disgusting, find a better way to get players in the correct lineup order
     sorted_lineup = []
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == 66]
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == 67 and p != flex_player]
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == 68 and p != flex_player]
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == 69 and p != flex_player]
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == QB_ROSTER_SLOT_ID]
+    sorted_lineup += [
+        p for p in lineup if p.roster_slot_id == RB_ROSTER_SLOT_ID and p != flex_player
+    ]
+    sorted_lineup += [
+        p for p in lineup if p.roster_slot_id == WR_ROSTER_SLOT_ID and p != flex_player
+    ]
+    sorted_lineup += [
+        p for p in lineup if p.roster_slot_id == TE_ROSTER_SLOT_ID and p != flex_player
+    ]
     sorted_lineup += [flex_player]
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == 71]
+    sorted_lineup += [p for p in lineup if p.roster_slot_id == DST_ROSTER_SLOT_ID]
 
     return sorted_lineup
 
 
 def pos_to_roster_slots(pos):
     if pos == "rb":
-        return [67]
+        return [RB_ROSTER_SLOT_ID]
     elif pos == "wr":
-        return [68]
+        return [WR_ROSTER_SLOT_ID]
     elif pos == "te":
-        return [69]
+        return [TE_ROSTER_SLOT_ID]
     elif pos == "flex":
-        return [67, 68, 69]
+        return [RB_ROSTER_SLOT_ID, WR_ROSTER_SLOT_ID, TE_ROSTER_SLOT_ID]
     elif pos == "wrte":
-        return [68, 69]
+        return [WR_ROSTER_SLOT_ID, TE_ROSTER_SLOT_ID]
 
 
 def optimize(constraints: OptimizerConstraintsModel):
@@ -83,7 +98,7 @@ def optimize(constraints: OptimizerConstraintsModel):
     model = LpProblem(name="optimize", sense=LpMaximize)
 
     if constraints.stack.with_qb.stacking() or constraints.stack.opp.stacking():
-        for qb in [p for p in players if players[p]["pos"] == 66]:
+        for qb in [p for p in players if players[p]["pos"] == QB_ROSTER_SLOT_ID]:
             for pos, count in constraints.stack.with_qb.stacked_positions().items():
                 c = count * -1
                 model += (
@@ -125,7 +140,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 67
+                if player_data["pos"] == RB_ROSTER_SLOT_ID
             ]
         )
         >= constraints.min_rb
@@ -135,7 +150,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 67
+                if player_data["pos"] == RB_ROSTER_SLOT_ID
             ]
         )
         <= constraints.max_rb
@@ -147,7 +162,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 68
+                if player_data["pos"] == WR_ROSTER_SLOT_ID
             ]
         )
         >= constraints.min_wr
@@ -157,7 +172,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 68
+                if player_data["pos"] == WR_ROSTER_SLOT_ID
             ]
         )
         <= constraints.max_wr
@@ -169,7 +184,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 69
+                if player_data["pos"] == TE_ROSTER_SLOT_ID
             ]
         )
         == constraints.min_te
@@ -179,7 +194,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 69
+                if player_data["pos"] == TE_ROSTER_SLOT_ID
             ]
         )
         <= constraints.max_te
@@ -191,7 +206,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 66
+                if player_data["pos"] == QB_ROSTER_SLOT_ID
             ]
         )
         == 1
@@ -203,7 +218,7 @@ def optimize(constraints: OptimizerConstraintsModel):
             [
                 player_vars[p]
                 for p, player_data in players.items()
-                if player_data["pos"] == 71
+                if player_data["pos"] == DST_ROSTER_SLOT_ID
             ]
         )
         == 1

@@ -1,4 +1,5 @@
 from app.model.models import *
+from app.model.draftkings_api_constants import DST_ROSTER_SLOT_ID
 
 
 class Columns:
@@ -29,6 +30,7 @@ class Columns:
         self.ownership = ownership
         self.cpt_rate = cpt_rate
         self.flex_rate = flex_rate
+        self.name_suffixes = [" Jr", " Jr.", " Sr", " Sr.", " III", " II"]
 
     def get_base(self, row):
         return row.get(self.base, None)
@@ -53,6 +55,14 @@ class Columns:
 
     def get_rate_value(self, row, key):
         return self.format_rate_value(row.get(key, None))
+
+    def name_without_suffix(self, name):
+        stripped = name
+        for s in self.name_suffixes:
+            if name.endswith(s):
+                stripped = name.replace(s, "")
+                return stripped
+        return stripped
 
     def get_populated_value(self, columns):
         return next(
@@ -79,54 +89,38 @@ class Columns:
             return None
 
     def get_player_id_subquery(self, row, db_session):
-        if self.draft_group_player_id and row.get(self.draft_group_player_id, None):
-            return db_session.query(DraftGroupPlayer.player_id).filter(
-                DraftGroupPlayer.id == row[self.draft_group_player_id]
-            )
-        else:
-            player_name = self.get_player(row)
-            position = self.get_position(row)
-            return db_session.query(PlayerEntity.dk_id).filter(
-                PlayerEntity.full_name == player_name,
-                PlayerEntity.position == position,
-            )
+        player_name = self.name_without_suffix(self.get_player(row))
+        position = self.get_position(row)
+        return db_session.query(PlayerEntity.dk_id).filter(
+            PlayerEntity.full_name == player_name,
+            PlayerEntity.position == position,
+        )
 
     def get_team_id_subquery(self, row, db_session):
-        t = row["team"]
-        team = db_session.query(TeamEntity).filter(TeamEntity.dk_abbr == t)
-        team_id = db_session.query(TeamEntity.dk_id).filter(
+        return db_session.query(TeamEntity.dk_id).filter(
             TeamEntity.dk_abbr == row["team"]
         )
-        print("{} | {} -- {}".format(team_id, t, team))
-        return team_id
 
     def get_draft_group_players(self, row, draft_group_id, db_session):
+        filters = [DraftGroupPlayer.draft_group_id == draft_group_id]
+        if self.draft_group_player_id and row.get(self.draft_group_player_id, None):
+            filters.append(
+                DraftGroupPlayer.id == row.get(self.draft_group_player_id, None)
+            )
+            return db_session.query(DraftGroupPlayer).filter(*filters).first()
+
         if self.get_position(row) == "DST":
-            return (
-                db_session.query(DraftGroupPlayer).filter(
-                    DraftGroupPlayer.id == row.get(self.draft_group_player_id, None)
-                )
-                if self.draft_group_player_id
-                and row.get(self.draft_group_player_id, None) != None
-                else db_session.query(DraftGroupPlayer)
-                .filter(
-                    DraftGroupPlayer.draft_group_id == draft_group_id,
-                    DraftGroupPlayer.roster_slot_id == 71,
-                    DraftGroupPlayer.team_id
-                    == self.get_team_id_subquery(row, db_session),
-                )
-                .first()
-            )
+            filters += [
+                DraftGroupPlayer.roster_slot_id == DST_ROSTER_SLOT_ID,
+                DraftGroupPlayer.team_id == self.get_team_id_subquery(row, db_session),
+            ]
         else:
-            return (
-                db_session.query(DraftGroupPlayer)
-                .filter(
-                    DraftGroupPlayer.draft_group_id == draft_group_id,
-                    DraftGroupPlayer.player_id
-                    == self.get_player_id_subquery(row, db_session),
-                )
-                .all()
+            filters.append(
+                DraftGroupPlayer.player_id
+                == self.get_player_id_subquery(row, db_session)
             )
+
+        return db_session.query(DraftGroupPlayer).filter(*filters).first()
 
 
 class EstablishTheRunColumns(Columns):
@@ -212,11 +206,6 @@ class RunTheSimsColumns(Columns):
                     row.get("Optimal Rate", None),
                 ],
             )
-        )
-
-    def get_team_id_subquery(self, row, db_session):
-        return db_session.query(TeamEntity.dk_id).filter(
-            TeamEntity.nickname == row["team"]
         )
 
 

@@ -9,12 +9,12 @@ def read_file_contents(file):
 
 
 def parse_row_to_projection_model(source, row, mapping, draft_group_id):
-    draft_group_players = mapping.get_draft_group_players(
+    draft_group_player = mapping.get_draft_group_players(
         row, draft_group_id, db.session
     )
 
-    if not draft_group_players:
-        return []
+    if not draft_group_player:
+        return None
 
     new_projection = Projection(
         source=ProjectionSource(source).name,
@@ -29,7 +29,7 @@ def parse_row_to_projection_model(source, row, mapping, draft_group_id):
         flex_rate=mapping.extract_csv_value(row, mapping.flex_rate),
     )
     existing_projection = [
-        proj for proj in draft_group_players[0].projections if proj.source == source
+        proj for proj in draft_group_player.projections if proj.source == source
     ]
     if existing_projection:
         proj = existing_projection[0]
@@ -79,9 +79,9 @@ def parse_row_to_projection_model(source, row, mapping, draft_group_id):
             else proj.flex_rate
         )
     else:
-        [dgp.projections.append(new_projection) for dgp in draft_group_players]
+        draft_group_player.projections.append(new_projection)
 
-    return draft_group_players
+    return draft_group_player
 
 
 def get_column_mapping(source):
@@ -101,14 +101,16 @@ def get_column_mapping(source):
 
 def file_rows_to_projection_entities(rows, source, draft_group_id):
     mapping = get_column_mapping(source)
-    return [
-        flattened_value
-        for sub_list in [
-            parse_row_to_projection_model(source, row, mapping, draft_group_id)
-            for row in rows
-        ]
-        for flattened_value in sub_list
-    ]
+    player_entities = [parse_row_to_projection_model(source, row, mapping, draft_group_id) for row in rows]
+    return [p for p in player_entities if p is not None]
+    # return [
+    #     flattened_value
+    #     for sub_list in [
+    #         parse_row_to_projection_model(source, row, mapping, draft_group_id)
+    #         for row in rows
+    #     ]
+    #     for flattened_value in sub_list
+    # ]
 
 
 def handle_file_upload(file, source, draft_group_id):
