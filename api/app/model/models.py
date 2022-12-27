@@ -279,6 +279,7 @@ class OptimizerConstraintsModel:
         max_per_team: int,
         flex: list,
         stack: OptimizerStackOptions,
+        players: List[DraftGroupPlayer],
     ):
         self.draft_group_id = draft_group_id
         self.count = count
@@ -286,6 +287,7 @@ class OptimizerConstraintsModel:
         self.max_per_team = max_per_team
         self.flex = flex
         self.stack = stack
+        self.players = players
 
     @property
     def min_rb(self):

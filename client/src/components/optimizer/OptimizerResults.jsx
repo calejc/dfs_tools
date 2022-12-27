@@ -11,10 +11,6 @@ export default function OptimizerResults() {
       return <Grid
         item
         key={i}
-        // xs={12}
-        // md={6}
-        // lg={4}
-        // xl={3}
       >
         <OptimizerLineupTable
           lineup={x}

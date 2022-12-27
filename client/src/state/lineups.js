@@ -66,7 +66,10 @@ export const optimizeLineups = createAsyncThunk(
   'fetchOptimizedLineups',
   async (_, { getState }) => await postOptimize(
     getState().draftGroup.value.id,
-    getState().lineups.settings
+    {
+      ...getState().lineups.settings,
+      players: getState().draftGroup.value.players
+    }
   )
 )
 

@@ -1,6 +1,7 @@
 import csv
 from app.model.csv_mappings import *
 from app.model.models import *
+from requests.structures import CaseInsensitiveDict
 from app import app
 
 
@@ -101,16 +102,13 @@ def get_column_mapping(source):
 
 def file_rows_to_projection_entities(rows, source, draft_group_id):
     mapping = get_column_mapping(source)
-    player_entities = [parse_row_to_projection_model(source, row, mapping, draft_group_id) for row in rows]
+    player_entities = [
+        parse_row_to_projection_model(
+            source, CaseInsensitiveDict(row), mapping, draft_group_id
+        )
+        for row in rows
+    ]
     return [p for p in player_entities if p is not None]
-    # return [
-    #     flattened_value
-    #     for sub_list in [
-    #         parse_row_to_projection_model(source, row, mapping, draft_group_id)
-    #         for row in rows
-    #     ]
-    #     for flattened_value in sub_list
-    # ]
 
 
 def handle_file_upload(file, source, draft_group_id):

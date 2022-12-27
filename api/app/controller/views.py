@@ -34,7 +34,7 @@ def upload_projections():
     handle_file_upload(
         request.files["file"],
         request.args.get("source"),
-        request.args.get("draftGroup"),
+        request.args.get("draftGroup")
     )
     return {}
 
@@ -59,6 +59,7 @@ def get_upcoming_draft_groups():
 def run_optimizer():
     data = request.json["data"]
     stack = data["stack"]
+    players = data.get('players', [])
     lineups = optimize(
         OptimizerConstraintsModel(
             draft_group_id=request.args["draftGroup"],
@@ -66,6 +67,7 @@ def run_optimizer():
             unique=data["unique"],
             max_per_team=data["max_per_team"],
             flex=data["flex_positions"],
+            players=players,
             stack=OptimizerStackOptions(
                 with_qb=OptimizerStackOption(
                     stack["WithQB"]["RB"],

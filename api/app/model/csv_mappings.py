@@ -8,6 +8,7 @@ class Columns:
         draft_group_player_id,
         player,
         position,
+        team,
         base,
         median,
         ceiling,
@@ -21,6 +22,7 @@ class Columns:
         self.draft_group_player_id = draft_group_player_id
         self.player = player
         self.position = position
+        self.team = team
         self.base = base
         self.median = median
         self.ceiling = ceiling
@@ -38,11 +40,11 @@ class Columns:
     def get_ownership(self, row):
         return row.get(self.ownership, None)
 
-    def get_player(self, row):
-        return row.get(self.player, None)
-
     def get_position(self, row):
         return row.get(self.position, None)
+
+    def get_ceiling(self, row):
+        return row.get(self.ceiling, None)
 
     def get_optimal(self, row):
         return row.get(self.optimal, None)
@@ -98,7 +100,7 @@ class Columns:
 
     def get_team_id_subquery(self, row, db_session):
         return db_session.query(TeamEntity.dk_id).filter(
-            TeamEntity.dk_abbr == row["team"]
+            TeamEntity.dk_abbr == row.get(self.team, None)
         )
 
     def get_draft_group_players(self, row, draft_group_id, db_session):
@@ -129,6 +131,7 @@ class EstablishTheRunColumns(Columns):
             "DKSlateID",
             "Player",
             "DK Position",
+            "Team",
             "DK Projection",
             None,
             "DK Ceiling",
@@ -146,7 +149,14 @@ class EstablishTheRunColumns(Columns):
         )
 
     def get_base(self, row):
-        return self.get_populated_value([row.get(self.base, None), row.get("DK", None)])
+        return self.get_populated_value(
+            [row.get(self.base, None), row.get("DK", None), row.get("Projection", None)]
+        )
+
+    def get_ceiling(self, row):
+        return self.get_populated_value(
+            [row.get(self.base, None), row.get("DK", None), row.get("Ceiling", None)]
+        )
 
 
 class RunTheSimsColumns(Columns):
@@ -155,6 +165,7 @@ class RunTheSimsColumns(Columns):
             "Slate ID",
             "Player",
             "Position",
+            "Team",
             "Base Projection",
             "Projection 50%",
             "p080",
@@ -182,19 +193,6 @@ class RunTheSimsColumns(Columns):
                 row.get(self.base, None),
                 row.get("projected points", None),
                 row.get("p050", None),
-            ],
-        )
-
-    def get_player(self, row):
-        return self.get_populated_value(
-            [row.get(self.player, None), row.get("player", None)]
-        )
-
-    def get_position(self, row):
-        return self.get_populated_value(
-            [
-                row.get(self.position, None),
-                row.get("position", None),
             ],
         )
 
@@ -241,11 +239,17 @@ class OneWeekSeasonColumns(Columns):
 class GenericColumns(Columns):
     def __init__(self):
         super().__init__(
-            "DK Projection",
-            None,
-            "DK Ceiling",
-            None,
-            None,
-            None,
-            "DK Ownership",
+            "ID",
+            "Player",
+            "Position",
+            "Team",
+            "Base",
+            "Median",
+            "Ceiling",
+            "Value",
+            "Boom Rate",
+            "Optimal Rate",
+            "pOwn",
+            "CPT Rate",
+            "FLEX Rate",
         )

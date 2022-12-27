@@ -6,8 +6,6 @@ from app.model.draftkings_api_constants import (
     WR_ROSTER_SLOT_ID,
     TE_ROSTER_SLOT_ID,
     DST_ROSTER_SLOT_ID,
-    SD_CPT_ROSTER_SLOT_ID,
-    SD_FLEX_ROSTER_SLOT_ID,
 )
 
 
@@ -33,11 +31,11 @@ def determine_flex_player(lineup):
 
     flex = None
     if len(rbs) == 3:
-        flex = 67
+        flex = RB_ROSTER_SLOT_ID
     elif len(wrs) == 4:
-        flex = 68
+        flex = WR_ROSTER_SLOT_ID
     elif len(tes) == 2:
-        flex = 69
+        flex = TE_ROSTER_SLOT_ID
     return max(
         [p for p in lineup if p.roster_slot_id == flex],
         key=lambda x: x.game_time,
