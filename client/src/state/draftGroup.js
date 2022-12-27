@@ -33,6 +33,10 @@ export const PARAMETERS = {
   ShowAll: {
     name: 'showAll',
     default: false,
+  },
+  Game: {
+    name: 'game',
+    default: null
   }
 }
 
@@ -64,6 +68,10 @@ const sorted = (filteredData, sortBy, isDesc) => {
   })
 }
 
+const gameSelectionIncludesPlayer = (player, gameId) => {
+  return gameId ? player.game_id == gameId : true
+}
+
 const playerForFilter = (player, currentFilter) => {
   if (parseInt(currentFilter) === 0) {
     return true
@@ -90,7 +98,8 @@ const rowsForCurrPage = (data, page, perPage) => {
 
 const filtered = (allPlayers, params, playersInLineup) => {
   const filteredPlayers = allPlayers?.filter(p => {
-    return playerForFilter(p, params.position) &&
+    return gameSelectionIncludesPlayer(p, params.game) &&
+      playerForFilter(p, params.position) &&
       p.player.toUpperCase().includes(params.query) &&
       hasProjection(p, params) &&
       !playersInLineup.map(x => x.value)?.includes({ ...p })
@@ -142,6 +151,12 @@ const draftGroupSlice = createSlice({
         [PARAMETERS.ShowAll.name]: action.payload,
       }
     },
+    game(state, action) {
+      state.parameters = {
+        ...state.parameters,
+        [PARAMETERS.Game.name]: action.payload
+      }
+    },
     reset(state) {
       state.parameters = initialParameters()
     },
@@ -172,6 +187,7 @@ export const sort = (sortBy, sortDir) => draftGroupSlice.actions.sort({ sortBy, 
 export const page = (pageNumber) => draftGroupSlice.actions.page(pageNumber)
 export const perPage = (perPage) => draftGroupSlice.actions.perPage(perPage)
 export const showAll = (showAll) => draftGroupSlice.actions.showAll(showAll)
+export const game = (gameId) => draftGroupSlice.actions.game(gameId)
 export const reset = () => draftGroupSlice.actions.reset()
 export const setFiltered = (currLineup) => draftGroupSlice.actions.setFiltered(currLineup)
 export const updatePlayer = (player) => draftGroupSlice.actions.updatePlayer(player)

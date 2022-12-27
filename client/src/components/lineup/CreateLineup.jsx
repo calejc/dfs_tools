@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import DATA_TABLE_COLUMN from '../common/table/DATA_TABLE_COLUMN'
 import { useEffect } from 'react'
 import { clearDraftGroup } from '../../state/draftGroup'
+import GameSelect from '../common/GameSelect'
+import isShowdown from '../../util/isShowdownSlate'
 
 export default function CreateLineup() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
@@ -39,15 +41,14 @@ export default function CreateLineup() {
     DATA_TABLE_COLUMN.FlexRate
   ]
 
-  const isShowdown = () => {
-    return selectedDraftGroup?.type === 'showdown'
-  }
-
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <DraftGroupSelect />
       </Grid>
+      {(selectedDraftGroup.id && !isShowdown(selectedDraftGroup)) && <Grid item xs={12}>
+        <GameSelect />
+      </Grid>}
       <Grid item xs={8}>
         <PlayerTable
           columns={isShowdown() ? COLUMNS_FOR_SHOWDOWN_GAME_TYPE : COLUMNS_FOR_CLASSIC_GAME_TYPE}

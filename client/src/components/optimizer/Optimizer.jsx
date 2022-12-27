@@ -11,6 +11,8 @@ import OptimizerSettings from './OptimizerSettings'
 import { optimizeLineups } from '../../state/lineups'
 import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
 import OptimizerResults from './OptimizerResults'
+import GameSelect from '../common/GameSelect'
+import isShowdown from '../../util/isShowdownSlate'
 
 export default function Optimizer() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
@@ -72,6 +74,9 @@ export default function Optimizer() {
       <Grid item xs={12}>
         <DraftGroupSelect />
       </Grid>
+      {(selectedDraftGroup.id && !isShowdown(selectedDraftGroup)) && <Grid item xs={12}>
+        <GameSelect />
+      </Grid>}
       <Grid item xs={12} container>
         <Grid item xs={6}>
           <Tabs value={tab} onChange={(e, i) => setTab(i)}>

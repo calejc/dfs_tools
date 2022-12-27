@@ -1,4 +1,4 @@
-from pulp import LpMaximize, LpProblem, lpSum, LpVariable, LpStatus
+from pulp import LpMaximize, LpProblem, lpSum, LpVariable
 from app.model.models import *
 from app.model.draftkings_api_constants import (
     QB_ROSTER_SLOT_ID,

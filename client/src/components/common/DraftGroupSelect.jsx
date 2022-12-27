@@ -66,7 +66,7 @@ export default function DraftGroupSelect() {
           sx={{ mt: '50px' }}
         >
           <Tabs
-            value={selectedDraftGroupId ? selectedDraftGroupId : false}
+            value={selectedDraftGroupId ? selectedDraftGroupId : falseu}
             onChange={onSelect}
             variant='scrollable'
             scrollButtons='auto'
