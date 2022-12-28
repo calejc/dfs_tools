@@ -53,6 +53,7 @@ export default function DataTable({ columns, data, header, footer, tableStyle, o
                     <TableCell
                       key={i}
                       sx={col.cellStyle}
+                      {...col.props}
                     >
                       {col.valueGetter(isLineupTable ? rowValueInput(col, row) : row)}
                     </TableCell>

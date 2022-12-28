@@ -7,6 +7,7 @@ import OptimizerLineupTableFooter from './OptimizerLineupTableFooter'
 export default function OptimizerLineupTable({ lineup }) {
   const COLS = [
     DATA_TABLE_COLUMN.Position,
+    DATA_TABLE_COLUMN.Team,
     DATA_TABLE_COLUMN.PlayerName,
     DATA_TABLE_COLUMN.CeilingProjection,
     DATA_TABLE_COLUMN.SalaryShort,
@@ -18,7 +19,7 @@ export default function OptimizerLineupTable({ lineup }) {
       columns={COLS}
       data={lineup}
       footer={<OptimizerLineupTableFooter lineup={lineup} />}
-      header={<TableRow><TableCell colSpan={5}></TableCell></TableRow>}
+      header={<TableRow><TableCell colSpan={6}></TableCell></TableRow>}
       tableStyle={{ maxWidth: '400px' }}
     />
   ))

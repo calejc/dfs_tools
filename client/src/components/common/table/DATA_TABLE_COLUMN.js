@@ -5,30 +5,48 @@ import ExposureInput, { MIN_MAX } from "./ExposureInput"
 import LockButton from "./LockButton"
 import RemovePlayerButton from "./RemovePlayerButton"
 
+const BASE_STYLE = { padding: '2px 6px!important' }
+
 const BASE_DATA_TABLE_COLUMN = (
   field,
   label = null,
   sortable = true,
   customValueGetter = null,
-  cellStyle = { padding: '2px 6px!important' }
+  cellStyle = BASE_STYLE,
+  props = {}
 ) => {
   return {
     field: field,
     label: label ? label : capitalize(field),
     sortable: sortable,
     valueGetter: customValueGetter ? customValueGetter : (row) => <>{row[field]}</>,
-    cellStyle: cellStyle
+    cellStyle: cellStyle,
+    props: props
   }
 }
 
 export const DATA_TABLE_COLUMN = {
   Position: BASE_DATA_TABLE_COLUMN('roster_slot_id', 'Pos', true, (row) => POSITIONS[row.roster_slot_id].label),
-  PlayerName: BASE_DATA_TABLE_COLUMN('player', 'Player', false),
-  Team: BASE_DATA_TABLE_COLUMN('team'),
-  Opponent: BASE_DATA_TABLE_COLUMN('opp'),
+  Team: BASE_DATA_TABLE_COLUMN(
+    'team',
+    <></>,
+    true,
+    (row) => <img height='15' src={row['team']['logo']}></img>,
+    BASE_STYLE,
+    { align: 'center' }
+  ),
+  PlayerName: BASE_DATA_TABLE_COLUMN('player', null, false),
+  Opponent: BASE_DATA_TABLE_COLUMN(
+    'opp',
+    null,
+    true,
+    (row) => row['opp']['abbr'],
+    BASE_STYLE,
+    { align: 'center' }
+  ),
   Salary: BASE_DATA_TABLE_COLUMN('salary'),
   SalaryShort: BASE_DATA_TABLE_COLUMN('salary', 'Sal'),
-  Points: BASE_DATA_TABLE_COLUMN('pts', 'Pts', true, ({ row, projection }) => <>{row[projection]}</>),
+  Points: BASE_DATA_TABLE_COLUMN('pts', null, true, ({ row, projection }) => <>{row[projection]}</>),
   BaseProjection: BASE_DATA_TABLE_COLUMN('base'),
   MedianProjection: BASE_DATA_TABLE_COLUMN('median'),
   CeilingProjection: BASE_DATA_TABLE_COLUMN('ceiling'),
@@ -67,9 +85,6 @@ export const DATA_TABLE_COLUMN = {
     false,
     (row) => <LockButton player={row} />
   ),
-  // Boost: BASE_DATA_TABLE_COLUMN(
-
-  // )
 }
 
 export default DATA_TABLE_COLUMN

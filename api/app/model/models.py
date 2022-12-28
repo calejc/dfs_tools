@@ -107,6 +107,13 @@ class TeamEntity(db.Model):
     pff_abbr: str = db.Column(db.String, nullable=False)
     fo_abbr: int = db.Column(db.String, nullable=False)
 
+    def serialize(self, eager_fetch=False):
+        return {
+          "abbr": self.dk_abbr,
+          "logo": self.team_logo_wiki,
+          "color": self.team_color
+        }
+
 
 @dataclass
 class PlayerEntity(db.Model):
@@ -198,7 +205,7 @@ class DraftGroupPlayer(db.Model):
 
     @property
     def team(self):
-        return self._team.dk_abbr
+        return self._team.serialize()
 
     @property
     def max(self):
@@ -215,7 +222,7 @@ class DraftGroupPlayer(db.Model):
     @property
     def opp(self):
         return [
-            team.dk_abbr
+            team.serialize()
             for team in [self._game.home_team, self._game.away_team]
             if team.dk_id != self.team_id
         ][0]

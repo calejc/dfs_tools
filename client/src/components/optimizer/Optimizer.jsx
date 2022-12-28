@@ -36,9 +36,8 @@ export default function Optimizer() {
 
   const COLUMNS = [
     DATA_TABLE_COLUMN.Position,
-    DATA_TABLE_COLUMN.PlayerName,
     DATA_TABLE_COLUMN.Team,
-    DATA_TABLE_COLUMN.Opponent,
+    DATA_TABLE_COLUMN.PlayerName,
     DATA_TABLE_COLUMN.Salary,
     DATA_TABLE_COLUMN.BaseProjection,
     DATA_TABLE_COLUMN.CeilingProjection,
