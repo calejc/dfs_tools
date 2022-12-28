@@ -104,7 +104,7 @@ def optimize(constraints: OptimizerConstraintsModel):
                         [
                             player_vars[i]
                             for i, data in players.items()
-                            if data["team"]['abbr'] == players[qb]["team"]['abbr']
+                            if data["team"]["abbr"] == players[qb]["team"]["abbr"]
                             and data["pos"] in pos_to_roster_slots(pos)
                         ]
                         + [c * player_vars[qb]]
@@ -118,7 +118,7 @@ def optimize(constraints: OptimizerConstraintsModel):
                         [
                             player_vars[i]
                             for i, data in players.items()
-                            if data["team"]['abbr'] == players[qb]["opp"]['abbr']
+                            if data["team"]["abbr"] == players[qb]["opp"]["abbr"]
                             and data["pos"] in pos_to_roster_slots(pos)
                         ]
                         + [c * player_vars[qb]]
