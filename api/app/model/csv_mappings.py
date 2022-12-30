@@ -69,9 +69,9 @@ class Columns:
                 return stripped
         return stripped
 
-    def get_populated_value(self, columns):
+    def get_populated_value(self, row, keys):
         return next(
-            (projection for projection in columns if projection is not None), None
+            (row.get(k, None) for k in keys), None
         )
 
     def extract_csv_value(self, row, key):
@@ -133,11 +133,11 @@ class EstablishTheRunColumns(Columns):
         super().__init__(
             "DKSlateID",
             "Player",
-            "DK Position",
+            ["DK Position", "Position"],
             "Team",
-            "DK Projection",
+            ["DK Projection", "DK", "Projection"],
             None,
-            "DK Ceiling",
+            ["DK Ceiling", "DK", "Ceiling"],
             "DK Value",
             None,
             None,
@@ -147,19 +147,13 @@ class EstablishTheRunColumns(Columns):
         )
 
     def get_position(self, row):
-        return self.get_populated_value(
-            [row.get(self.position, None), row.get("Position", None)]
-        )
+        return self.get_populated_value(row, self.position)
 
     def get_base(self, row):
-        return self.get_populated_value(
-            [row.get(self.base, None), row.get("DK", None), row.get("Projection", None)]
-        )
+        return self.get_populated_value(row, self.base)
 
     def get_ceiling(self, row):
-        return self.get_populated_value(
-            [row.get(self.base, None), row.get("DK", None), row.get("Ceiling", None)]
-        )
+        return self.get_populated_value(row, self.ceiling)
 
 
 class RunTheSimsColumns(Columns):
@@ -169,76 +163,27 @@ class RunTheSimsColumns(Columns):
             "Player",
             "Position",
             "Team",
-            "Base Projection",
+            ["Base Projection", "projected points", "p050"],
             "Projection 50%",
             "p080",
             "Pts/$",
             "Boom Rate",
-            "Optimal Rates",
-            "Proj Own",
+            ["Optimal Rates", "Optimal Rate"],
+            ["Proj Own", "projOwn"],
             "CPT Rate",
             "FLEX Rate",
         )
 
     def get_ownership(self, row):
-        return self.format_rate_value(
-            self.get_populated_value(
-                [
-                    row.get(self.ownership, None),
-                    row.get("projOwn", None),
-                ],
-            )
-        )
+        return self.get_populated_value(row, self.ownership)
 
     def get_base(self, row):
-        return self.get_populated_value(
-            [
-                row.get(self.base, None),
-                row.get("projected points", None),
-                row.get("p050", None),
-            ],
-        )
+        return self.get_populated_value(row, self.base)
 
     def get_optimal(self, row):
-        return self.format_rate_value(
-            self.get_populated_value(
-                [
-                    row.get(self.optimal, None),
-                    row.get("Optimal Rate", None),
-                ],
-            )
-        )
+        return self.get_populated_value(row, self.optimal)
 
 
-# TODO: map
-class DailyRotoColumns(Columns):
-    def __init__(self):
-        super().__init__(
-            "DK Projection",
-            None,
-            "DK Ceiling",
-            None,
-            None,
-            None,
-            "DK Ownership",
-        )
-
-
-# TODO: map
-class OneWeekSeasonColumns(Columns):
-    def __init__(self):
-        super().__init__(
-            "DK Projection",
-            None,
-            "DK Ceiling",
-            None,
-            None,
-            None,
-            "DK Ownership",
-        )
-
-
-# TODO: design generic mapping/template
 class GenericColumns(Columns):
     def __init__(self):
         super().__init__(

@@ -59,7 +59,7 @@ def get_upcoming_draft_groups():
 def run_optimizer():
     data = request.json["data"]
     stack = data["stack"]
-    players = data.get('players', [])
+    players = data.get("players", [])
     lineups = optimize(
         OptimizerConstraintsModel(
             draft_group_id=request.args["draftGroup"],
