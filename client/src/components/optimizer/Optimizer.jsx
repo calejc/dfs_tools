@@ -13,24 +13,20 @@ import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
 import OptimizerResults from './OptimizerResults'
 import GameSelect from '../common/GameSelect'
 import isShowdown from '../../util/isShowdownSlate'
+import LoadingBox from '../common/LoadingBox'
 
 export default function Optimizer() {
   const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
-  const { value: lineups, status: status } = useSelector(state => state.lineups)
+  const status = useSelector(state => state.lineups.status)
   const dispatch = useDispatch()
   const [tab, setTab] = useState(0)
-
-  useEffect(() => {
-    if (status == REQUEST_STATUS.SUCCEEDED) {
-      setTab(2)
-    }
-  }, [lineups])
 
   useEffect(() => {
     dispatch(clearDraftGroup())
   }, [])
 
   const onRun = () => {
+    setTab(2)
     dispatch(optimizeLineups())
   }
 
@@ -51,16 +47,20 @@ export default function Optimizer() {
   ]
 
   const tabContent = () => {
-    switch (tab) {
-      case 0:
-        return <PlayerTable
-          columns={COLUMNS}
-          selectedDraftGroup={selectedDraftGroup}
-        />
-      case 1:
-        return <OptimizerSettings />
-      case 2:
-        return <OptimizerResults />
+    if (status === REQUEST_STATUS.IN_PROGRESS) {
+      return <LoadingBox isLoading={true} />
+    } else {
+      switch (tab) {
+        case 0:
+          return <PlayerTable
+            columns={COLUMNS}
+            selectedDraftGroup={selectedDraftGroup}
+          />
+        case 1:
+          return <OptimizerSettings />
+        case 2:
+          return <OptimizerResults />
+      }
     }
   }
 
@@ -96,6 +96,7 @@ export default function Optimizer() {
             <Button
               variant='outlined'
               onClick={onRun}
+              disabled={!selectedDraftGroup.id}
             >
               Run
             </Button>

@@ -25,7 +25,7 @@ export default function OptimizerSettings() {
         <Tab label='Stack' />
       </Tabs>
     </Grid>
-    <Grid item sx={{ padding: '20px 50px' }}>
+    <Grid item sx={{ padding: '20px 0px 25px 50px' }}>
       {tabContent()}
     </Grid>
   </Grid>

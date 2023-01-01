@@ -77,8 +77,174 @@ def pos_to_roster_slots(pos):
         return [WR_ROSTER_SLOT_ID, TE_ROSTER_SLOT_ID]
 
 
+def base_constraints_and_objective(model, players, player_vars):
+    model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
+    model += lpSum([player_vars[p] for p in players.keys()]) == 9
+
+
+def salary_cap_constraint(model, players, player_vars):
+    model += (
+        lpSum([players[p]["sal"] * player_vars[p] for p in players.keys()]) <= 50000
+    )
+
+
+def single_positional_constraint(model, players, player_vars, position):
+    model += (
+        lpSum(
+            [
+                player_vars[p]
+                for p, player_data in players.items()
+                if player_data["pos"] == position
+            ]
+        )
+        == 1
+    )
+
+
+def range_positional_constraint(model, players, player_vars, position, min, max):
+    model += (
+        lpSum(
+            [
+                player_vars[p]
+                for p, player_data in players.items()
+                if player_data["pos"] == position
+            ]
+        )
+        >= min
+    )
+    model += (
+        lpSum(
+            [
+                player_vars[p]
+                for p, player_data in players.items()
+                if player_data["pos"] == position
+            ]
+        )
+        <= max
+    )
+
+
+def qb_constraints(model, players, player_vars):
+    single_positional_constraint(model, players, player_vars, QB_ROSTER_SLOT_ID)
+
+
+def dst_constraints(model, players, player_vars):
+    single_positional_constraint(model, players, player_vars, DST_ROSTER_SLOT_ID)
+
+
+def rb_constraints(model, players, player_vars, constraints):
+    range_positional_constraint(
+        model,
+        players,
+        player_vars,
+        RB_ROSTER_SLOT_ID,
+        constraints.min_rb,
+        constraints.max_rb,
+    )
+
+
+def wr_constraints(model, players, player_vars, constraints):
+    range_positional_constraint(
+        model,
+        players,
+        player_vars,
+        WR_ROSTER_SLOT_ID,
+        constraints.min_wr,
+        constraints.max_wr,
+    )
+
+
+def te_constraints(model, players, player_vars, constraints):
+    range_positional_constraint(
+        model,
+        players,
+        player_vars,
+        TE_ROSTER_SLOT_ID,
+        constraints.min_te,
+        constraints.max_te,
+    )
+
+
+def positional_constraints(model, players, player_vars, constraints):
+    qb_constraints(model, players, player_vars)
+    dst_constraints(model, players, player_vars)
+    rb_constraints(model, players, player_vars, constraints)
+    wr_constraints(model, players, player_vars, constraints)
+    te_constraints(model, players, player_vars, constraints)
+
+
+def stacking_constraints(model, players, player_vars, constraints):
+    for qb in [p for p in players if players[p]["pos"] == QB_ROSTER_SLOT_ID]:
+        for pos, count in constraints.stack.with_qb.stacked_positions().items():
+            c = count * -1
+            model += (
+                lpSum(
+                    [
+                        player_vars[i]
+                        for i, data in players.items()
+                        if data["team"]["abbr"] == players[qb]["team"]["abbr"]
+                        and data["pos"] in pos_to_roster_slots(pos)
+                    ]
+                    + [c * player_vars[qb]]
+                )
+                >= 0
+            )
+        for pos, count in constraints.stack.opp.stacked_positions().items():
+            c = count * -1
+            model += (
+                lpSum(
+                    [
+                        player_vars[i]
+                        for i, data in players.items()
+                        if data["team"]["abbr"] == players[qb]["opp"]["abbr"]
+                        and data["pos"] in pos_to_roster_slots(pos)
+                    ]
+                    + [c * player_vars[qb]]
+                )
+                >= 0
+            )
+
+
+def max_per_team_constraints(model, players, player_vars, constraints):
+    # FIXME: this should be updated to account for stack options.
+    # Example: Stack set to 3 with QB, 2 bringbacks, and max_per_team set to 1. <- this should be solveable
+    for rbwrte in [
+        p
+        for p in players
+        if players[p]["pos"]
+        in (RB_ROSTER_SLOT_ID, WR_ROSTER_SLOT_ID, TE_ROSTER_SLOT_ID)
+    ]:
+        qb_for_team = sorted(
+            [
+                p
+                for p, player_data in players.items()
+                if player_data["team"] == players[rbwrte]["team"]
+                and player_data["pos"] == QB_ROSTER_SLOT_ID
+            ],
+            key=lambda x: players[x]["pts"],
+        )[0]
+        model += (
+            lpSum(
+                player_vars[i]
+                for i, data in players.items()
+                if data["team"] == players[rbwrte]["team"]
+                and i != qb_for_team
+                and data["pos"] != DST_ROSTER_SLOT_ID
+            )
+            <= constraints.max_per_team
+        )
+
+def new_lineup_constraint(model, player_vars, constraints):
+    # Will not duplicate this result for additional solutions
+    model += lpSum(
+        player_vars[int(p.name.split("_")[1])]
+        for p in model.variables()
+        if p.varValue > 0
+    ) <= (9 - constraints.unique)
+
+
 def optimize(constraints: OptimizerConstraintsModel):
-    SALARY_CAP = 50000
+    # TODO: dont always use 'ceiling' projection, allow use of base/ceiling
     players = {
         p.id: {
             "sal": p.salary,
@@ -95,169 +261,18 @@ def optimize(constraints: OptimizerConstraintsModel):
     player_vars = LpVariable.dicts("player", players.keys(), cat="Binary")
     model = LpProblem(name="optimize", sense=LpMaximize)
 
+    base_constraints_and_objective(model, players, player_vars)
+    salary_cap_constraint(model, players, player_vars)
+    positional_constraints(model, players, player_vars, constraints)
+    # max_per_team_constraints(model, players, player_vars, constraints)
+
     if constraints.stack.with_qb.stacking() or constraints.stack.opp.stacking():
-        for qb in [p for p in players if players[p]["pos"] == QB_ROSTER_SLOT_ID]:
-            for pos, count in constraints.stack.with_qb.stacked_positions().items():
-                c = count * -1
-                model += (
-                    lpSum(
-                        [
-                            player_vars[i]
-                            for i, data in players.items()
-                            if data["team"]["abbr"] == players[qb]["team"]["abbr"]
-                            and data["pos"] in pos_to_roster_slots(pos)
-                        ]
-                        + [c * player_vars[qb]]
-                    )
-                    >= 0
-                )
-            for pos, count in constraints.stack.opp.stacked_positions().items():
-                c = count * -1
-                model += (
-                    lpSum(
-                        [
-                            player_vars[i]
-                            for i, data in players.items()
-                            if data["team"]["abbr"] == players[qb]["opp"]["abbr"]
-                            and data["pos"] in pos_to_roster_slots(pos)
-                        ]
-                        + [c * player_vars[qb]]
-                    )
-                    >= 0
-                )
-
-    model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
-    model += (
-        lpSum([players[p]["sal"] * player_vars[p] for p in players.keys()])
-        <= SALARY_CAP
-    )
-
-    # RB
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == RB_ROSTER_SLOT_ID
-            ]
-        )
-        >= constraints.min_rb
-    )
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == RB_ROSTER_SLOT_ID
-            ]
-        )
-        <= constraints.max_rb
-    )
-
-    # WR
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == WR_ROSTER_SLOT_ID
-            ]
-        )
-        >= constraints.min_wr
-    )
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == WR_ROSTER_SLOT_ID
-            ]
-        )
-        <= constraints.max_wr
-    )
-
-    # TE
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == TE_ROSTER_SLOT_ID
-            ]
-        )
-        == constraints.min_te
-    )
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == TE_ROSTER_SLOT_ID
-            ]
-        )
-        <= constraints.max_te
-    )
-
-    # QB
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == QB_ROSTER_SLOT_ID
-            ]
-        )
-        == 1
-    )
-
-    # DST
-    model += (
-        lpSum(
-            [
-                player_vars[p]
-                for p, player_data in players.items()
-                if player_data["pos"] == DST_ROSTER_SLOT_ID
-            ]
-        )
-        == 1
-    )
-
-    model += lpSum([player_vars[p] for p in players.keys()]) == 9
-
-    # No two or more RB/WR/TE from same team.
-    # for rbwrte in [p for p in players if players[p]["pos"] in (67, 68, 69)]:
-    #     qb_for_team = sorted(
-    #         [
-    #             p
-    #             for p, player_data in players.items()
-    #             if player_data["team"] == players[rbwrte]["team"]
-    #             and player_data["pos"] == 66
-    #         ],
-    #         key=lambda x: players[x]["pts"],
-    #     )[0]
-    #     print("{} - {} || {} - {}".format(rbwrte, players[rbwrte]['team'], qb_for_team, players[qb_for_team]['team']))
-    #     model += (
-    #         lpSum(
-    #             player_vars[i]
-    #             for i, data in players.items()
-    #             if data["team"] == players[rbwrte]["team"]
-    #             and i != qb_for_team
-    #             and data['pos'] != 71
-    #         )
-    #         <= 1
-    #     )
+        stacking_constraints(model, players, player_vars, constraints)
 
     lineups = []
     for _ in range(constraints.count):
         model.solve()
-        model += (
-            lpSum(
-                player_vars[int(p.name.split("_")[1])]
-                for p in model.variables()
-                if p.varValue > 0
-            )
-            <= 8
-        )
+        new_lineup_constraint(model, player_vars, constraints)
         lineups.append(to_lineup(model))
 
     return lineups

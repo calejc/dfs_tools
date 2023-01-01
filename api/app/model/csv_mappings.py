@@ -71,7 +71,8 @@ class Columns:
 
     def get_populated_value(self, row, keys):
         return next(
-            (row.get(k, None) for k in keys), None
+            (row.get(k, None) for k in keys if k is not row.get(k, None) is not None),
+            None,
         )
 
     def extract_csv_value(self, row, key):
@@ -175,13 +176,13 @@ class RunTheSimsColumns(Columns):
         )
 
     def get_ownership(self, row):
-        return self.get_populated_value(row, self.ownership)
+        return self.format_rate_value(self.get_populated_value(row, self.ownership))
 
     def get_base(self, row):
         return self.get_populated_value(row, self.base)
 
     def get_optimal(self, row):
-        return self.get_populated_value(row, self.optimal)
+        return self.format_rate_value(self.get_populated_value(row, self.optimal))
 
 
 class GenericColumns(Columns):

@@ -47,11 +47,10 @@ export default function FileUploadModal({ open, onClose }) {
     loading()
     postFileUpload(file, source, draftGroup)
       .then(() => {
-        setSnackBarOpen
+        setSnackBarOpen(true)
         done()
       })
       .catch((e) => {
-        console.log(e)
         setError(true)
         done()
       })

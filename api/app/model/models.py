@@ -107,10 +107,10 @@ class TeamEntity(db.Model):
     pff_abbr: str = db.Column(db.String, nullable=False)
     fo_abbr: int = db.Column(db.String, nullable=False)
 
-    def serialize(self, eager_fetch=False):
+    def serialize(self):
         return {
           "abbr": self.dk_abbr,
-          "logo": self.team_logo_wiki,
+          "logo": "/img/{}.png".format(self.dk_abbr.lower()),
           "color": self.team_color
         }
 

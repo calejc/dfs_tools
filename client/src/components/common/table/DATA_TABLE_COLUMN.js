@@ -30,7 +30,7 @@ export const DATA_TABLE_COLUMN = {
   Team: BASE_DATA_TABLE_COLUMN(
     'team',
     <></>,
-    true,
+    false,
     (row) => <img height='15' src={row['team']['logo']}></img>,
     BASE_STYLE,
     { align: 'center' }

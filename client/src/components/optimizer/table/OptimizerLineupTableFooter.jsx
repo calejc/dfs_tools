@@ -32,10 +32,10 @@ export default function OptimizerLineupTableFooter({ lineup }) {
 
   return <TableRow sx={{ border: 'none!important' }}>
     <TableCell
-      colSpan={2}
+      colSpan={3}
       sx={CELL_STYLES}
     >
-      {lineupProductOwnership} %
+      Product Own: {lineupProductOwnership} %
     </TableCell>
     <TableCell
       colSpan={1}

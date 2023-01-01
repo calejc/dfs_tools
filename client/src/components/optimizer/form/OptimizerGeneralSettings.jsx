@@ -1,4 +1,4 @@
-import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, Slider, Typography } from '@mui/material'
+import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, Input, Slider, TextField, Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -11,7 +11,7 @@ export default function OptimizerGeneralSettings() {
   const onChange = (e, v) => {
     dispatch(updateConstraints({
       ...constraints,
-      count: v
+      [e.target.name]: v ? v : e.target.valueAsNumber
     }))
   }
 
@@ -27,13 +27,40 @@ export default function OptimizerGeneralSettings() {
 
 
   return <Grid container>
-    <Grid container columnSpacing={2}>
+    <Grid container spacing={2}>
+      <Grid item container xs={10} direction="row" alignItems='center' columnSpacing={2}>
+        <Grid item>Max unstacked players per team: </Grid>
+        <Grid item>
+          <TextField
+            name='max_per_team'
+            value={constraints.max_per_team}
+            size="small"
+            sx={{ width: "70px!important" }}
+            type='number'
+            onChange={onChange}
+          />
+        </Grid>
+      </Grid>
+      <Grid item container xs={10} direction="row" alignItems='center' columnSpacing={2}>
+        <Grid item>Uniques: </Grid>
+        <Grid item>
+          <TextField
+            name='unique'
+            value={constraints.unique}
+            size="small"
+            sx={{ width: "70px!important" }}
+            type='number'
+            onChange={onChange}
+          />
+        </Grid>
+      </Grid>
       <Grid item>
         <Typography>Number of Lineups: {constraints.count}</Typography>
       </Grid>
       <Grid item>
         <Box sx={{ width: '250px!important' }}>
           <Slider
+            name='count'
             size='small'
             max={150}
             min={1}
