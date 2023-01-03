@@ -18,10 +18,8 @@ class Site(str, enum.Enum):
 
 
 class ProjectionSource(str, enum.Enum):
-    ONE_WEEK_SEASON = "ows"
     RUN_THE_SIMS = "rts"
     ESTABLISH_THE_RUN = "etr"
-    DAILY_ROTO = "dr"
     OTHER = "other"
 
 
@@ -75,8 +73,8 @@ class Projection(db.Model):
     ownership: float = db.Column(db.Float)
 
     # RTS Showdown-specific
-    cpt_rate: float = db.Column(db.Float)
-    flex_rate: float = db.Column(db.Float)
+    # cpt_rate: float = db.Column(db.Float)
+    # flex_rate: float = db.Column(db.Float)
 
 
 @dataclass
@@ -109,9 +107,9 @@ class TeamEntity(db.Model):
 
     def serialize(self):
         return {
-          "abbr": self.dk_abbr,
-          "logo": "/img/{}.png".format(self.dk_abbr.lower()),
-          "color": self.team_color
+            "abbr": self.dk_abbr,
+            "logo": "/img/{}.png".format(self.dk_abbr.lower()),
+            "color": self.team_color,
         }
 
 
@@ -154,15 +152,6 @@ class Game(db.Model):
 @dataclass
 class DraftGroupPlayer(db.Model):
     __tablename__ = "draft_group_player"
-    ceiling: float
-    base: float
-    median: float
-    value: float
-    ownership: float
-    boom: float
-    optimal: float
-    cpt_rate: float
-    flex_rate: float
     player: str
     team: str
     opp: str
@@ -173,7 +162,7 @@ class DraftGroupPlayer(db.Model):
     roster_slot_id: int = db.Column(db.Integer, nullable=False)
     flex_id: int = db.Column(db.Integer)
     game_id: int = db.Column(db.Integer, db.ForeignKey("game.id"))
-    player_id = db.Column(db.Integer, db.ForeignKey("player.dk_id"))
+    player_id: int = db.Column(db.Integer, db.ForeignKey("player.dk_id"))
     team_id = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
     draft_group_id = db.Column(db.Integer, db.ForeignKey("draft_group.id"))
     _player = db.relationship("PlayerEntity")
@@ -182,6 +171,15 @@ class DraftGroupPlayer(db.Model):
     projections = db.relationship(
         "Projection", secondary=draft_group_player_projection_relational_table
     )
+    base: float = avg_column_property(id, Projection.base, 2)
+    ceiling: float = avg_column_property(id, Projection.ceiling, 2)
+    median: float = avg_column_property(id, Projection.median, 2)
+    value: float = avg_column_property(id, Projection.value, 2)
+    ownership: float = avg_column_property(
+        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
+    )
+    boom: float = avg_column_property(id, Projection.boom, 3)
+    optimal: float = avg_column_property(id, Projection.optimal, 3)
 
     @property
     def player(self):
@@ -190,18 +188,6 @@ class DraftGroupPlayer(db.Model):
             if self.player_id and self._player
             else self._team.nickname
         )
-
-    base = avg_column_property(id, Projection.base, 2)
-    ceiling = avg_column_property(id, Projection.ceiling, 2)
-    median = avg_column_property(id, Projection.median, 2)
-    value = avg_column_property(id, Projection.value, 2)
-    ownership = avg_column_property(
-        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
-    )
-    boom = avg_column_property(id, Projection.boom, 3)
-    optimal = avg_column_property(id, Projection.optimal, 3)
-    cpt_rate = avg_column_property(id, Projection.cpt_rate, 2)
-    flex_rate = avg_column_property(id, Projection.flex_rate, 2)
 
     @property
     def team(self):

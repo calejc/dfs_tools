@@ -16,6 +16,7 @@ class Columns:
         boom,
         optimal,
         ownership,
+        cpt_ownership,
         cpt_rate,
         flex_rate,
     ):
@@ -30,9 +31,16 @@ class Columns:
         self.boom = boom
         self.optimal = optimal
         self.ownership = ownership
+        self.cpt_ownership = cpt_ownership
         self.cpt_rate = cpt_rate
         self.flex_rate = flex_rate
         self.name_suffixes = [" Jr", " Jr.", " Sr", " Sr.", " III", " II"]
+
+    def get_cpt_own(self, row):
+        return row.get(self.cpt_ownership, None)
+
+    def get_flex_own(self, row):
+        return row.get(self.ownership, None)
 
     def get_base(self, row):
         return row.get(self.base, None)
@@ -87,6 +95,10 @@ class Columns:
                 return self.get_position(row)
             elif key == self.optimal:
                 return self.get_optimal(row)
+            elif key == self.ceiling:
+                return self.get_ceiling(row)
+            elif key == self.cpt_ownership:
+                return self.get_cpt_own(row)
             elif key in [self.boom, self.cpt_rate, self.flex_rate]:
                 return self.get_rate_value(row, key)
             else:
@@ -113,7 +125,7 @@ class Columns:
             filters.append(
                 DraftGroupPlayer.id == row.get(self.draft_group_player_id, None)
             )
-            return db_session.query(DraftGroupPlayer).filter(*filters).first()
+            return db_session.query(DraftGroupPlayer).filter(*filters).all()
 
         if self.get_position(row) == "DST":
             filters += [
@@ -126,14 +138,14 @@ class Columns:
                 == self.get_player_id_subquery(row, db_session)
             )
 
-        return db_session.query(DraftGroupPlayer).filter(*filters).first()
+        return db_session.query(DraftGroupPlayer).filter(*filters).all()
 
 
 class EstablishTheRunColumns(Columns):
     def __init__(self):
         super().__init__(
             "DKSlateID",
-            "Player",
+            ["Player", "Name"],
             ["DK Position", "Position"],
             "Team",
             ["DK Projection", "DK", "Projection"],
@@ -142,13 +154,23 @@ class EstablishTheRunColumns(Columns):
             "DK Value",
             None,
             None,
-            "DK Ownership",
+            ["DK Ownership", "Total Own"],
+            "CPT Own",
             None,
             None,
         )
 
+    def get_player(self, row):
+        return self.get_populated_value(row, self.player)
+
+    def get_flex_own(self, row):
+        return float(self.get_ownership(row)) - float(self.get_cpt_own(row))
+
     def get_position(self, row):
         return self.get_populated_value(row, self.position)
+
+    def get_ownership(self, row):
+        return self.get_populated_value(row, self.ownership)
 
     def get_base(self, row):
         return self.get_populated_value(row, self.base)
@@ -170,10 +192,17 @@ class RunTheSimsColumns(Columns):
             "Pts/$",
             "Boom Rate",
             ["Optimal Rates", "Optimal Rate"],
-            ["Proj Own", "projOwn"],
+            ["Proj Own", "projOwn", "FLEX Own"],
+            "CPT Own",
             "CPT Rate",
             "FLEX Rate",
         )
+
+    def get_cpt_own(self, row):
+        return self.format_rate_value(row.get(self.cpt_ownership, None))
+
+    def get_flex_own(self, row):
+        return self.get_ownership(row)
 
     def get_ownership(self, row):
         return self.format_rate_value(self.get_populated_value(row, self.ownership))
@@ -199,6 +228,7 @@ class GenericColumns(Columns):
             "Boom Rate",
             "Optimal Rate",
             "pOwn",
+            "CPT Own",
             "CPT Rate",
             "FLEX Rate",
         )

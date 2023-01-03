@@ -76,7 +76,9 @@ export default function FileUploadModal({ open, onClose }) {
           "Value",
           "Boom Rate",
           "Optimal Rate",
-          "pOwn", "CPT Rate",
+          "pOwn",
+          "CPT Own",
+          "CPT Rate",
           "FLEX Rate"
         ].join(',')].join('\n')
       ]),

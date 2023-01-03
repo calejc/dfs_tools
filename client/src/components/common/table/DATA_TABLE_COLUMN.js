@@ -19,7 +19,7 @@ const BASE_DATA_TABLE_COLUMN = (
     field: field,
     label: label ? label : capitalize(field),
     sortable: sortable,
-    valueGetter: customValueGetter ? customValueGetter : (row) => <>{row[field]}</>,
+    valueGetter: customValueGetter ? customValueGetter : (row) => <span>{row[field]}</span>,
     cellStyle: cellStyle,
     props: props
   }
@@ -53,8 +53,6 @@ export const DATA_TABLE_COLUMN = {
   Ownership: BASE_DATA_TABLE_COLUMN('ownership', 'pOwn'),
   OptimalRate: BASE_DATA_TABLE_COLUMN('optimal'),
   BoomRate: BASE_DATA_TABLE_COLUMN('boom'),
-  CaptainRate: BASE_DATA_TABLE_COLUMN('cpt_rate', 'CPT Rate'),
-  FlexRate: BASE_DATA_TABLE_COLUMN('flex_rate', 'FLEX Rate'),
   RemovePlayer: BASE_DATA_TABLE_COLUMN(
     'remove',
     <></>,

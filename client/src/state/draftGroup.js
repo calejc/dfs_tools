@@ -96,13 +96,14 @@ const rowsForCurrPage = (data, page, perPage) => {
   )
 }
 
-const filtered = (allPlayers, params, playersInLineup) => {
+const filtered = (allPlayers, params, lineup) => {
+  const playersInLineup = lineup.map(x => x.value.player_id).filter(pid => pid)
   const filteredPlayers = allPlayers?.filter(p => {
     return gameSelectionIncludesPlayer(p, params.game) &&
       playerForFilter(p, params.position) &&
       p.player.toUpperCase().includes(params.query) &&
       hasProjection(p, params) &&
-      !playersInLineup.map(x => x.value)?.includes({ ...p })
+      !playersInLineup?.includes(p.player_id)
   })
 
   return sorted(filteredPlayers, params.sortBy, params.sortDir === SORT_DIR.DESCENDING)

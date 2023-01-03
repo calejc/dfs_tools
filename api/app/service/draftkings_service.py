@@ -122,14 +122,15 @@ def extract_slates():
         return {}
 
     with app.app_context():
-        return [
+        [
             persist_draft_group_data(dg)
             for dg in upcoming_slates
             if dg[DRAFT_GROUP_ID] not in [dg.id for dg in query_upcoming_draft_groups()]
         ]
+        return query_upcoming_draft_groups()
 
 
-def get_draft_group_players(draft_group_id):
+def get_draft_group_data(draft_group_id):
     return get_entity_by_type_and_id(draft_group_id, DraftGroup).serialize(True)
 
 

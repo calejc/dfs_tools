@@ -47,7 +47,7 @@ def fetch_new_draft_groups():
 
 @app.route("/draft-group/<dgid>")
 def get_draft_group_with_players(dgid):
-    return jsonify(get_draft_group_players(dgid))
+    return jsonify(get_draft_group_data(dgid))
 
 
 @app.route("/upcoming-draft-groups")

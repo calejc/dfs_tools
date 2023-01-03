@@ -18,26 +18,15 @@ export default function CreateLineup() {
     dispatch(clearDraftGroup())
   }, [])
 
-  const BASE_COLUMN_SET = [
+  const BASE_COLUMNS_SET = [
     DATA_TABLE_COLUMN.Position,
     DATA_TABLE_COLUMN.Team,
     DATA_TABLE_COLUMN.PlayerName,
     DATA_TABLE_COLUMN.Salary,
     DATA_TABLE_COLUMN.BaseProjection,
     DATA_TABLE_COLUMN.CeilingProjection,
-    DATA_TABLE_COLUMN.Ownership
-  ]
-
-  const COLUMNS_FOR_CLASSIC_GAME_TYPE = [
-    ...BASE_COLUMN_SET,
-    DATA_TABLE_COLUMN.OptimalRate,
-    DATA_TABLE_COLUMN.BoomRate
-  ]
-
-  const COLUMNS_FOR_SHOWDOWN_GAME_TYPE = [
-    ...BASE_COLUMN_SET,
-    DATA_TABLE_COLUMN.CaptainRate,
-    DATA_TABLE_COLUMN.FlexRate
+    DATA_TABLE_COLUMN.Ownership,
+    DATA_TABLE_COLUMN.OptimalRate
   ]
 
   return (
@@ -50,7 +39,7 @@ export default function CreateLineup() {
       </Grid>}
       <Grid item xs={8}>
         <PlayerTable
-          columns={isShowdown() ? COLUMNS_FOR_SHOWDOWN_GAME_TYPE : COLUMNS_FOR_CLASSIC_GAME_TYPE}
+          columns={BASE_COLUMNS_SET}
           selectedDraftGroup={selectedDraftGroup}
           selectedDraftGroupId={selectedDraftGroup.id}
         />
