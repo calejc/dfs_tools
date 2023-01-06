@@ -68,6 +68,7 @@ export const optimizeLineups = createAsyncThunk(
     getState().draftGroup.value.id,
     {
       ...getState().lineups.settings,
+      useCeiling: getState().draftGroup.parameters.useCeiling,
       players: getState().draftGroup.value.players
     }
   )

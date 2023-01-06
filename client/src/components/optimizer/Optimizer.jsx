@@ -39,7 +39,7 @@ export default function Optimizer() {
     DATA_TABLE_COLUMN.CeilingProjection,
     DATA_TABLE_COLUMN.Ownership,
     DATA_TABLE_COLUMN.OptimalRate,
-    DATA_TABLE_COLUMN.BoomRate,
+    DATA_TABLE_COLUMN.Projection,
     DATA_TABLE_COLUMN.MaxExposure,
     DATA_TABLE_COLUMN.MinExposure,
     DATA_TABLE_COLUMN.Exclude,
@@ -54,6 +54,7 @@ export default function Optimizer() {
         case 0:
           return <PlayerTable
             columns={COLUMNS}
+            optoTable={true}
             selectedDraftGroup={selectedDraftGroup}
           />
         case 1:

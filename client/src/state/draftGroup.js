@@ -37,6 +37,10 @@ export const PARAMETERS = {
   Game: {
     name: 'game',
     default: null
+  },
+  UseCeiling: {
+    name: 'useCeiling',
+    default: true
   }
 }
 
@@ -166,6 +170,20 @@ const draftGroupSlice = createSlice({
       state.filtered = filteredAndSorted
       state.paginated = rowsForCurrPage(filteredAndSorted, state.parameters.page, state.parameters.perPage)
     },
+    useCeiling(state, action) {
+      state.parameters = {
+        ...state.parameters,
+        [PARAMETERS.UseCeiling.name]: action.payload
+      }
+    },
+    updatePlayerProjections(state) {
+      // TODO: might help with performance to only update the `projected` value for filtered (currently shown players on page).
+      // TODO: after those are updated, continue with rest. this way, user's page isn't bogged down while updating entire player pool
+      const projKey = state.parameters.useCeiling ? 'ceiling' : 'base'
+      const players = state.value.players?.slice()
+      players?.map(p => p.projected = p[projKey])
+      state.value.players = players
+    },
     updatePlayer(state, action) {
       const players = state.value.players?.slice()
       const existing = players.filter(p => p.id === action.payload.id)[0]
@@ -188,6 +206,8 @@ export const sort = (sortBy, sortDir) => draftGroupSlice.actions.sort({ sortBy, 
 export const page = (pageNumber) => draftGroupSlice.actions.page(pageNumber)
 export const perPage = (perPage) => draftGroupSlice.actions.perPage(perPage)
 export const showAll = (showAll) => draftGroupSlice.actions.showAll(showAll)
+export const useCeiling = (useCeiling) => draftGroupSlice.actions.useCeiling(useCeiling)
+export const updatePlayerProjections = () => draftGroupSlice.actions.updatePlayerProjections()
 export const game = (gameId) => draftGroupSlice.actions.game(gameId)
 export const reset = () => draftGroupSlice.actions.reset()
 export const setFiltered = (currLineup) => draftGroupSlice.actions.setFiltered(currLineup)

@@ -3,6 +3,7 @@ import { POSITIONS } from "../../../state/lineup"
 import ExcludeButton from "./ExcludeButton"
 import ExposureInput, { MIN_MAX } from "./ExposureInput"
 import LockButton from "./LockButton"
+import NumberInputField from "./NumberInputField"
 import RemovePlayerButton from "./RemovePlayerButton"
 
 const BASE_STYLE = { padding: '2px 6px!important' }
@@ -46,13 +47,19 @@ export const DATA_TABLE_COLUMN = {
   ),
   Salary: BASE_DATA_TABLE_COLUMN('salary'),
   SalaryShort: BASE_DATA_TABLE_COLUMN('salary', 'Sal'),
-  Points: BASE_DATA_TABLE_COLUMN('pts', null, true, ({ row, projection }) => <>{row[projection]}</>),
+  Points: BASE_DATA_TABLE_COLUMN('pts', null, true, ({ row, projection }) => <span>{row[projection]}</span>),
   BaseProjection: BASE_DATA_TABLE_COLUMN('base'),
   MedianProjection: BASE_DATA_TABLE_COLUMN('median'),
   CeilingProjection: BASE_DATA_TABLE_COLUMN('ceiling'),
   Ownership: BASE_DATA_TABLE_COLUMN('ownership', 'pOwn'),
   OptimalRate: BASE_DATA_TABLE_COLUMN('optimal'),
   BoomRate: BASE_DATA_TABLE_COLUMN('boom'),
+  Projection: BASE_DATA_TABLE_COLUMN(
+    'projected',
+    'Proj',
+    true,
+    (row) => <NumberInputField value={row['projected']} disabled={true} onChange={() => void (0)} />
+  ),
   RemovePlayer: BASE_DATA_TABLE_COLUMN(
     'remove',
     <></>,

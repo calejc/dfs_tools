@@ -234,6 +234,7 @@ def max_per_team_constraints(model, players, player_vars, constraints):
             <= constraints.max_per_team
         )
 
+
 def new_lineup_constraint(model, player_vars, constraints):
     # Will not duplicate this result for additional solutions
     model += lpSum(
@@ -246,17 +247,15 @@ def new_lineup_constraint(model, player_vars, constraints):
 def optimize(constraints: OptimizerConstraintsModel):
     # TODO: dont always use 'ceiling' projection, allow use of base/ceiling
     players = {
-        p.id: {
-            "sal": p.salary,
-            "pts": p.ceiling,
-            "pos": p.roster_slot_id,
-            "team": p.team,
-            "opp": p.opp,
+        p["id"]: {
+            "sal": p["salary"],
+            "pts": p["projected"],
+            "pos": p["roster_slot_id"],
+            "team": p["team"],
+            "opp": p["opp"],
         }
-        for p in db.session.query(DraftGroupPlayer)
-        .filter(DraftGroupPlayer.draft_group_id == constraints.draft_group_id)
-        .all()
-        if p.ceiling is not None
+        for p in constraints.players
+        if p.get("projected", None) is not None
     }
     player_vars = LpVariable.dicts("player", players.keys(), cat="Binary")
     model = LpProblem(name="optimize", sense=LpMaximize)

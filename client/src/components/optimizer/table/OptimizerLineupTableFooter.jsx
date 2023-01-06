@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 
 const CELL_STYLES = { border: 'none!important', padding: '2px 6px!important' }
 
-export default function OptimizerLineupTableFooter({ lineup }) {
+export default function OptimizerLineupTableFooter({ lineup, useCeiling }) {
   const [totalLineupProjection, setTotalLineupProjection] = useState()
   const [totalLineupOwnership, setTotalLineupOwnership] = useState()
   const [lineupProductOwnership, setLineupProductOwnership] = useState()
@@ -12,7 +12,7 @@ export default function OptimizerLineupTableFooter({ lineup }) {
     // TODO: this is disgusting
     setTotalLineupProjection(
       parseFloat(
-        lineup.reduce((accum, player) => accum + (player.ceiling), 0)
+        lineup.reduce((accum, player) => accum + (useCeiling ? player.ceiling : player.base), 0)
       ).toFixed(2)
     )
     setTotalLineupOwnership(

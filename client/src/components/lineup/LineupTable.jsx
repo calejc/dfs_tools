@@ -32,6 +32,7 @@ export default function LineupTable() {
       data={lineup}
       footer={<LineupTableFooter totalSalaryLeft={totalSalaryLeft()} useCeilingProjection={useCeiling} />}
       header={<LineupTableHeader columns={COLS} useCeiling={useCeiling} salaryLeft={salaryLeft()} />}
+      useCeiling={useCeiling}
       isLineupTable={true}
     />
   ))

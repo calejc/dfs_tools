@@ -12,7 +12,7 @@ import { setLineupPlayer } from '../../state/lineup'
 
 const TABLE_STYLES = { border: '1px solid rgba(224, 224, 224, 1)', borderRadius: '5px' }
 
-export default function PlayerTable({ columns, selectedDraftGroup, selectedDraftGroupId }) {
+export default function PlayerTable({ columns, selectedDraftGroup, selectedDraftGroupId, optoTable = false }) {
   const dispatch = useDispatch()
   const { status, parameters, paginated } = useSelector(state => state.draftGroup)
   const { isLoading, loading, done } = useLoading()
@@ -56,7 +56,7 @@ export default function PlayerTable({ columns, selectedDraftGroup, selectedDraft
           data={paginated}
           tableStyle={TABLE_STYLES}
           onRowSelect={onPlayerSelect}
-          header={<PlayerTableHeader columns={columns} />}
+          header={<PlayerTableHeader columns={columns} optoTable={optoTable} />}
           footer={<PlayerTablePagination />}
         />
       )}

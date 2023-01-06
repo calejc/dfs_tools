@@ -157,6 +157,7 @@ class DraftGroupPlayer(db.Model):
     opp: str
     max: int
     min: int
+    projected: float
     id: int = db.Column(db.Integer, primary_key=True)
     salary: int = db.Column(db.Integer, nullable=False)
     roster_slot_id: int = db.Column(db.Integer, nullable=False)
@@ -200,6 +201,10 @@ class DraftGroupPlayer(db.Model):
     @property
     def min(self):
         return 0
+
+    @property
+    def projected(self):
+        return self.ceiling
 
     @property
     def game_time(self):
@@ -272,6 +277,7 @@ class OptimizerConstraintsModel:
         max_per_team: int,
         flex: list,
         stack: OptimizerStackOptions,
+        use_ceiling: bool,
         players: List[DraftGroupPlayer],
     ):
         self.draft_group_id = draft_group_id
@@ -280,6 +286,7 @@ class OptimizerConstraintsModel:
         self.max_per_team = max_per_team
         self.flex = flex
         self.stack = stack
+        self.use_ceiling = use_ceiling,
         self.players = players
 
     @property

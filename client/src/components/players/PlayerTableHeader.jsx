@@ -1,14 +1,19 @@
 import { Checkbox, FormControlLabel, FormGroup, Tab, TableCell, TableRow, TableSortLabel, Tabs, TextField } from '@mui/material'
 import React from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import '../../App.css'
 import { SORT_DIR } from '../../shared/CONSTANTS'
-import { filter, query, showAll, sort } from '../../state/draftGroup'
+import { filter, query, showAll, sort, updatePlayerProjections, useCeiling } from '../../state/draftGroup'
 import { POSITIONS } from '../../state/lineup'
 
-export default function PlayerTableHeader({ columns }) {
+export default function PlayerTableHeader({ columns, optoTable }) {
   const dispatch = useDispatch()
   const { value: selectedDraftGroup, parameters } = useSelector(state => state.draftGroup)
+
+  useEffect(() => {
+    dispatch(updatePlayerProjections())
+  }, [parameters.useCeiling])
 
   const onTabChange = (e, value) => {
     dispatch(filter(value))
@@ -31,13 +36,17 @@ export default function PlayerTableHeader({ columns }) {
     dispatch(showAll(!e.target.checked))
   }
 
+  const toggleUseCeiling = (e) => {
+    dispatch(useCeiling(e.target.checked))
+  }
+
   const draftGroupPositionalTabs = () => {
     return Object.keys(POSITIONS).filter(k => POSITIONS[k].draftGroupType === selectedDraftGroup.type)
   }
 
   return <>
     <TableRow className='player-table-header-row'>
-      <TableCell colSpan={columns.length - 6} padding='none'>
+      <TableCell colSpan={4} padding='none'>
         <Tabs
           value={parameters.position}
           className='position-tabs-group'
@@ -49,13 +58,27 @@ export default function PlayerTableHeader({ columns }) {
           })}
         </Tabs>
       </TableCell>
-      <TableCell padding='none' colSpan={3}>
-        <FormGroup
-          sx={{ lineHeight: '16px', padding: '2px 6px', fontSize: '10px!important' }}
-        >
+      {optoTable && <TableCell align="right" padding='none' colSpan={3}>
+        <FormGroup>
           <FormControlLabel
-            sx={{ lineHeight: '16px!important', padding: '2px 6px', fontSize: '10px!important' }}
+            label="Use Ceiling Projection"
+            disableTypography
+            control={
+              <Checkbox
+                sx={{ padding: '2px 6px' }}
+                size='small'
+                checked={parameters.useCeiling}
+                onChange={toggleUseCeiling}
+              />
+            }
+          />
+        </FormGroup>
+      </TableCell>}
+      <TableCell padding='none' colSpan={3} align="right">
+        <FormGroup sx={{ paddingLeft: '150px' }}>
+          <FormControlLabel
             label="Hide 0 proj"
+            disableTypography
             control={
               <Checkbox
                 sx={{ padding: '2px 6px' }}
@@ -68,7 +91,7 @@ export default function PlayerTableHeader({ columns }) {
         </FormGroup>
       </TableCell>
       <TableCell
-        colSpan={3}
+        colSpan={4}
         padding='none'
         align='right'
       >

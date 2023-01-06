@@ -8,10 +8,17 @@ import {
   TableBody,
   TableFooter,
 } from '@mui/material'
-import { useSelector } from 'react-redux'
 
-export default function DataTable({ columns, data, header, footer, tableStyle, onRowSelect = null, isLineupTable = false }) {
-  const useCeilingProjection = isLineupTable ? useSelector(state => state.lineup.useCeilingProjection) : undefined
+export default function DataTable({
+  columns,
+  data,
+  header,
+  footer,
+  tableStyle,
+  onRowSelect = null,
+  useCeiling = null,
+  isLineupTable = false
+}) {
 
   const styles = () => {
     return onRowSelect ? { cursor: 'cell' } : {}
@@ -21,15 +28,24 @@ export default function DataTable({ columns, data, header, footer, tableStyle, o
     return onRowSelect ? onRowSelect(row) : void (0)
   }
 
-  const rowValueInput = (column, row) => {
-    switch (column.field) {
-      case 'remove':
-      case 'roster_slot_id':
-        return row
-      case 'pts':
-        return { row: row.value, projection: useCeilingProjection ? 'ceiling' : 'base' }
-      default:
-        return row.value
+  const rowValueInput = (column, row, isLineupTable) => {
+    if (isLineupTable) {
+      switch (column.field) {
+        case 'remove':
+        case 'roster_slot_id':
+          return row
+        case 'pts':
+          return { row: row.value, projection: useCeiling ? 'ceiling' : 'base' }
+        default:
+          return row.value
+      }
+    } else {
+      switch (column.field) {
+        case 'pts':
+          return { row: row, projection: useCeiling ? 'ceiling' : 'base' }
+        default:
+          return row
+      }
     }
   }
 
@@ -55,7 +71,7 @@ export default function DataTable({ columns, data, header, footer, tableStyle, o
                       sx={col.cellStyle}
                       {...col.props}
                     >
-                      {col.valueGetter(isLineupTable ? rowValueInput(col, row) : row)}
+                      {col.valueGetter(rowValueInput(col, row, isLineupTable))}
                     </TableCell>
                   )
                 })}

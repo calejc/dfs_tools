@@ -68,6 +68,7 @@ def run_optimizer():
             max_per_team=data["max_per_team"],
             flex=data["flex_positions"],
             players=players,
+            use_ceiling=data['useCeiling'],
             stack=OptimizerStackOptions(
                 with_qb=OptimizerStackOption(
                     stack["WithQB"]["RB"],
