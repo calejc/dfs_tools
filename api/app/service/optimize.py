@@ -1,4 +1,5 @@
 from pulp import LpMaximize, LpProblem, lpSum, LpVariable
+from collections import Counter
 from app.model.models import *
 from app.model.draftkings_api_constants import (
     QB_ROSTER_SLOT_ID,
@@ -9,12 +10,16 @@ from app.model.draftkings_api_constants import (
 )
 
 
-def query_player(player_var):
+def query_player_by_id(player_id):
     return (
         db.session.query(DraftGroupPlayer)
-        .filter(DraftGroupPlayer.id == player_var.name.split("_")[1])
+        .filter(DraftGroupPlayer.id == player_id)
         .first()
     )
+
+
+def query_player(player_var):
+    return query_player_by_id(player_var.name.split("_")[1])
 
 
 def determine_flex_player(lineup):
@@ -79,7 +84,23 @@ def pos_to_roster_slots(pos):
 
 def base_constraints_and_objective(model, players, player_vars):
     model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
-    model += lpSum([player_vars[p] for p in players.keys()]) == 9
+    model += lpSum(player_vars.values()) == 9
+    # model += (
+    #     lpSum(
+    #         [
+    #             len(
+    #                 set(
+    #                     [
+    #                         players[p]["team"]
+    #                         for p in players.keys()
+    #                         if player_vars[p] >= 1
+    #                     ]
+    #                 )
+    #             )
+    #         ]
+    #     )
+    #     >= 3
+    # )
 
 
 def salary_cap_constraint(model, players, player_vars):
@@ -182,7 +203,7 @@ def stacking_constraints(model, players, player_vars, constraints):
                     [
                         player_vars[i]
                         for i, data in players.items()
-                        if data["team"]["abbr"] == players[qb]["team"]["abbr"]
+                        if data["team"] == players[qb]["team"]
                         and data["pos"] in pos_to_roster_slots(pos)
                     ]
                     + [c * player_vars[qb]]
@@ -196,7 +217,7 @@ def stacking_constraints(model, players, player_vars, constraints):
                     [
                         player_vars[i]
                         for i, data in players.items()
-                        if data["team"]["abbr"] == players[qb]["opp"]["abbr"]
+                        if data["team"] == players[qb]["opp"]
                         and data["pos"] in pos_to_roster_slots(pos)
                     ]
                     + [c * player_vars[qb]]
@@ -245,14 +266,13 @@ def new_lineup_constraint(model, player_vars, constraints):
 
 
 def optimize(constraints: OptimizerConstraintsModel):
-    # TODO: dont always use 'ceiling' projection, allow use of base/ceiling
     players = {
         p["id"]: {
             "sal": p["salary"],
             "pts": p["projected"],
             "pos": p["roster_slot_id"],
-            "team": p["team"],
-            "opp": p["opp"],
+            "team": p["team"]["abbr"],
+            "opp": p["opp"]["abbr"],
         }
         for p in constraints.players
         if p.get("projected", None) is not None
@@ -274,4 +294,23 @@ def optimize(constraints: OptimizerConstraintsModel):
         new_lineup_constraint(model, player_vars, constraints)
         lineups.append(to_lineup(model))
 
-    return lineups
+    ctr = Counter()
+    for lu in lineups:
+        for p in lu:
+            ctr[p.id] += 1
+    resp = {
+        "lineups": lineups,
+        "exposure": sorted(
+            [
+                {
+                    "team": {"logo": "/img/{}.png".format(players[i]["team"].lower())},
+                    "player": query_player_by_id(i).player,
+                    "exposure": round(ctr[i] / len(lineups) * 100, 2),
+                }
+                for i in ctr
+            ],
+            key=lambda x: x["exposure"],
+            reverse=True,
+        ),
+    }
+    return resp

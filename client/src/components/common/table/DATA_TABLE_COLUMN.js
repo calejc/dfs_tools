@@ -54,6 +54,7 @@ export const DATA_TABLE_COLUMN = {
   Ownership: BASE_DATA_TABLE_COLUMN('ownership', 'pOwn'),
   OptimalRate: BASE_DATA_TABLE_COLUMN('optimal'),
   BoomRate: BASE_DATA_TABLE_COLUMN('boom'),
+  Exposure: BASE_DATA_TABLE_COLUMN('exposure', '%'),
   Projection: BASE_DATA_TABLE_COLUMN(
     'projected',
     'Proj',

@@ -27,7 +27,7 @@ export default function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Navbar />
-      <Container sx={{ height: '100vh', minWidth: '1400px', margin: 'auto' }}>
+      <Container sx={{ height: '100vh', minWidth: '1600px', margin: 'auto' }}>
         <Routes>
           <Route path='/lineup-builder' element={<CreateLineup />} />
           <Route path='/optimizer' element={<Optimizer />} />

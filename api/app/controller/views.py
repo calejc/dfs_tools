@@ -34,7 +34,7 @@ def upload_projections():
     handle_file_upload(
         request.files["file"],
         request.args.get("source"),
-        request.args.get("draftGroup")
+        request.args.get("draftGroup"),
     )
     return {}
 
@@ -60,7 +60,7 @@ def run_optimizer():
     data = request.json["data"]
     stack = data["stack"]
     players = data.get("players", [])
-    lineups = optimize(
+    optimized_resp = optimize(
         OptimizerConstraintsModel(
             draft_group_id=request.args["draftGroup"],
             count=data["count"],
@@ -68,7 +68,7 @@ def run_optimizer():
             max_per_team=data["max_per_team"],
             flex=data["flex_positions"],
             players=players,
-            use_ceiling=data['useCeiling'],
+            use_ceiling=data["useCeiling"],
             stack=OptimizerStackOptions(
                 with_qb=OptimizerStackOption(
                     stack["WithQB"]["RB"],
@@ -87,4 +87,4 @@ def run_optimizer():
             ),
         )
     )
-    return jsonify(lineups)
+    return jsonify(optimized_resp)

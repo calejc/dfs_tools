@@ -150,7 +150,7 @@ class EstablishTheRunColumns(Columns):
             "Team",
             ["DK Projection", "DK", "Projection"],
             None,
-            ["DK Ceiling", "DK", "Ceiling"],
+            ["DK Ceiling", "DK", "Ceiling", "DKCeiling"],
             "DK Value",
             None,
             None,

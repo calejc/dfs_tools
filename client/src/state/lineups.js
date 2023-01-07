@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import postOptimize from "../api/postOptimize"
-import createDefaultReducersForAsyncThunk from "./apiBased/createDefaultReducersForAsyncThunk"
+import { asyncPendingReducer, asyncRejectedReducer } from "./apiBased/createDefaultReducersForAsyncThunk"
 import createInitialState from "./apiBased/createInitialState"
+import REQUEST_STATUS from "./apiBased/REQUEST_STATUS"
 
 export const DEFAULT_STACK_OPTIONS = {
   WithQB: {
@@ -59,6 +60,7 @@ const initialConstraints = () => {
 
 export const initialState = {
   ...createInitialState([]),
+  exposure: [],
   settings: initialConstraints()
 }
 
@@ -74,6 +76,20 @@ export const optimizeLineups = createAsyncThunk(
   )
 )
 
+const reducers = {
+  [optimizeLineups.pending]: (state) => {
+    asyncPendingReducer(state)
+  },
+  [optimizeLineups.fulfilled]: (state, action) => {
+    state.status = REQUEST_STATUS.SUCCEEDED
+    state.value = action.payload.lineups
+    state.exposure = action.payload.exposure
+  },
+  [optimizeLineups.rejected]: (state, action) => {
+    asyncRejectedReducer(state, action)
+  }
+}
+
 const lineupsSlice = createSlice({
   name: 'lineups',
   initialState,
@@ -82,7 +98,7 @@ const lineupsSlice = createSlice({
       state.settings = action.payload
     }
   },
-  extraReducers: createDefaultReducersForAsyncThunk(optimizeLineups)
+  extraReducers: reducers
 })
 
 export const updateConstraints = (constraints) => lineupsSlice.actions.updateConstraints(constraints)
