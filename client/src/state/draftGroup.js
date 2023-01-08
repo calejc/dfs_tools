@@ -105,7 +105,7 @@ const filtered = (allPlayers, params, lineup) => {
   const filteredPlayers = allPlayers?.filter(p => {
     return gameSelectionIncludesPlayer(p, params.game) &&
       playerForFilter(p, params.position) &&
-      p.player.toUpperCase().includes(params.query) &&
+      p.player.toUpperCase().includes(params.query.toString().toUpperCase()) &&
       hasProjection(p, params) &&
       !playersInLineup?.includes(p.player_id)
   })
@@ -121,20 +121,24 @@ const draftGroupSlice = createSlice({
       state.parameters = {
         ...state.parameters,
         [PARAMETERS.Position.name]: [PARAMETERS.Position.default],
-        [PARAMETERS.Query.name]: action.payload.toUpperCase()
+        [PARAMETERS.Query.name]: action.payload,
+        [PARAMETERS.Page.name]: [PARAMETERS.Page.default]
       }
     },
     filterPositions(state, action) {
       state.parameters = {
         ...state.parameters,
-        [PARAMETERS.Position.name]: action.payload
+        [PARAMETERS.Position.name]: action.payload,
+        [PARAMETERS.Query.name]: [PARAMETERS.Query.default],
+        [PARAMETERS.Page.name]: [PARAMETERS.Page.default]
       }
     },
     sort(state, action) {
       state.parameters = {
         ...state.parameters,
         [PARAMETERS.SortBy.name]: action.payload.sortBy,
-        [PARAMETERS.SortDir.name]: action.payload.sortDir
+        [PARAMETERS.SortDir.name]: action.payload.sortDir,
+        [PARAMETERS.Page.name]: [PARAMETERS.Page.default]
       }
     },
     page(state, action) {
@@ -154,12 +158,14 @@ const draftGroupSlice = createSlice({
       state.parameters = {
         ...state.parameters,
         [PARAMETERS.ShowAll.name]: action.payload,
+        [PARAMETERS.Page.name]: [PARAMETERS.Page.default]
       }
     },
     game(state, action) {
       state.parameters = {
         ...state.parameters,
-        [PARAMETERS.Game.name]: action.payload
+        [PARAMETERS.Game.name]: action.payload,
+        [PARAMETERS.Page.name]: [PARAMETERS.Page.default]
       }
     },
     reset(state) {

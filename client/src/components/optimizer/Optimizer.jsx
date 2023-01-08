@@ -22,6 +22,10 @@ export default function Optimizer() {
   const [tab, setTab] = useState(0)
 
   useEffect(() => {
+    setTab(0)
+  }, [selectedDraftGroup])
+
+  useEffect(() => {
     dispatch(clearDraftGroup())
   }, [])
 

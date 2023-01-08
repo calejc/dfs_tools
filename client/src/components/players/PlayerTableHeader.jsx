@@ -96,6 +96,7 @@ export default function PlayerTableHeader({ columns, optoTable }) {
         align='right'
       >
         <TextField
+          value={parameters.query}
           hiddenLabel
           placeholder='Search'
           variant='standard'
