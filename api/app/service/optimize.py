@@ -256,7 +256,14 @@ def max_per_team_constraints(model, players, player_vars, constraints):
         )
 
 
+def player_specific_constraints(model, players, player_vars):
+    for id, p in players.items():
+        if p["min"] == 100:
+            model += lpSum([player_vars[id]]) >= 1
+
+
 def new_lineup_constraint(model, player_vars, constraints):
+    # TODO: also ensure player selections are within exposure constraints
     # Will not duplicate this result for additional solutions
     model += lpSum(
         player_vars[int(p.name.split("_")[1])]
@@ -273,9 +280,12 @@ def optimize(constraints: OptimizerConstraintsModel):
             "pos": p["roster_slot_id"],
             "team": p["team"]["abbr"],
             "opp": p["opp"]["abbr"],
+            "own": p["ownership"],
+            "min": p["min"],
+            "max": p["max"],
         }
         for p in constraints.players
-        if p.get("projected", None) is not None
+        if p["projected"] is not None and p["max"] > 0
     }
     player_vars = LpVariable.dicts("player", players.keys(), cat="Binary")
     model = LpProblem(name="optimize", sense=LpMaximize)
@@ -283,6 +293,7 @@ def optimize(constraints: OptimizerConstraintsModel):
     base_constraints_and_objective(model, players, player_vars)
     salary_cap_constraint(model, players, player_vars)
     positional_constraints(model, players, player_vars, constraints)
+    player_specific_constraints(model, players, player_vars)
     # max_per_team_constraints(model, players, player_vars, constraints)
 
     if constraints.stack.with_qb.stacking() or constraints.stack.opp.stacking():
