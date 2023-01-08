@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Grid, TableCell, TableRow, Toolbar, Typography, Paper } from '@mui/material'
+import { Box, TableCell, TableRow, Toolbar, Typography, Paper } from '@mui/material'
 import DATA_TABLE_COLUMN from '../../common/table/DATA_TABLE_COLUMN'
 import DataTable from '../../common/table/DataTable'
 
@@ -20,21 +20,19 @@ export default function OptimizerResultsExposureTable({ exposures }) {
     </TableRow>
   }
 
-  return <Grid item>
-    <Box component={Paper}>
-      <Toolbar sx={{ maxHeight: '45px!important', minHeight: '45px!important' }}>
-        <Typography
-          variant='h6'
-        >
-          Exposure
-        </Typography>
-      </Toolbar>
-      <DataTable
-        columns={COLS}
-        data={exposures}
-        header={header()}
-        footer={<></>}
-      />
-    </Box>
-  </Grid>
+  return <Box component={Paper} sx={{ marginTop: '10px!important' }}>
+    <Toolbar sx={{ maxHeight: '45px!important', minHeight: '45px!important' }}>
+      <Typography
+        variant='h6'
+      >
+        Exposure
+      </Typography>
+    </Toolbar>
+    <DataTable
+      columns={COLS}
+      data={exposures}
+      header={header()}
+      footer={<></>}
+    />
+  </Box>
 }
