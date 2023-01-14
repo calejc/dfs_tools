@@ -72,10 +72,6 @@ class Projection(db.Model):
     optimal: float = db.Column(db.Float)
     ownership: float = db.Column(db.Float)
 
-    # RTS Showdown-specific
-    # cpt_rate: float = db.Column(db.Float)
-    # flex_rate: float = db.Column(db.Float)
-
 
 @dataclass
 class TeamEntity(db.Model):
@@ -158,6 +154,7 @@ class DraftGroupPlayer(db.Model):
     max: int
     min: int
     projected: float
+    leverage: float
     id: int = db.Column(db.Integer, primary_key=True)
     salary: int = db.Column(db.Integer, nullable=False)
     roster_slot_id: int = db.Column(db.Integer, nullable=False)
@@ -172,6 +169,7 @@ class DraftGroupPlayer(db.Model):
     projections = db.relationship(
         "Projection", secondary=draft_group_player_projection_relational_table
     )
+    boom = avg_column_property(id, Projection.boom, 3)
     base: float = avg_column_property(id, Projection.base, 2)
     ceiling: float = avg_column_property(id, Projection.ceiling, 2)
     median: float = avg_column_property(id, Projection.median, 2)
@@ -179,7 +177,6 @@ class DraftGroupPlayer(db.Model):
     ownership: float = avg_column_property(
         id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
     )
-    boom: float = avg_column_property(id, Projection.boom, 3)
     optimal: float = avg_column_property(id, Projection.optimal, 3)
 
     @property
@@ -193,6 +190,14 @@ class DraftGroupPlayer(db.Model):
     @property
     def team(self):
         return self._team.serialize()
+
+    @property
+    def leverage(self):
+        return (
+            round(self.optimal - self.ownership, 2)
+            if self.optimal and self.ownership
+            else None
+        )
 
     @property
     def max(self):
@@ -286,8 +291,11 @@ class OptimizerConstraintsModel:
         self.max_per_team = max_per_team
         self.flex = flex
         self.stack = stack
-        self.use_ceiling = use_ceiling,
+        self.use_ceiling = use_ceiling
         self.players = players
+
+    def has_stack_settings(self):
+        return self.stack.with_qb.stacking() or self.stack.opp.stacking()
 
     @property
     def min_rb(self):

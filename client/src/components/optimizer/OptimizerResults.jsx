@@ -63,6 +63,7 @@ export default function OptimizerResults() {
           <CsvDownloadButton
             data={csvData()}
             filename={filename()}
+            tooltip="Download lineups"
           />
           <OptimizerResultsExposureTable exposures={exposure} />
         </Grid>

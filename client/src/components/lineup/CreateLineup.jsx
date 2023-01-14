@@ -26,7 +26,8 @@ export default function CreateLineup() {
     DATA_TABLE_COLUMN.BaseProjection,
     DATA_TABLE_COLUMN.CeilingProjection,
     DATA_TABLE_COLUMN.Ownership,
-    DATA_TABLE_COLUMN.OptimalRate
+    DATA_TABLE_COLUMN.OptimalRate,
+    DATA_TABLE_COLUMN.Leverage
   ]
 
   return (

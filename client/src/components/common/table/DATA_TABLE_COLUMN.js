@@ -53,6 +53,12 @@ export const DATA_TABLE_COLUMN = {
   CeilingProjection: BASE_DATA_TABLE_COLUMN('ceiling'),
   Ownership: BASE_DATA_TABLE_COLUMN('ownership', 'pOwn'),
   OptimalRate: BASE_DATA_TABLE_COLUMN('optimal'),
+  Leverage: BASE_DATA_TABLE_COLUMN(
+    'leverage',
+    null,
+    true,
+    (row) => <span className={row['leverage'] > 0 ? 'green' : 'red'}>{row['leverage']}</span>
+  ),
   BoomRate: BASE_DATA_TABLE_COLUMN('boom'),
   Exposure: BASE_DATA_TABLE_COLUMN('exposure', '%'),
   Projection: BASE_DATA_TABLE_COLUMN(
