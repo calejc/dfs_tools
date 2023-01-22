@@ -192,7 +192,7 @@ const draftGroupSlice = createSlice({
     },
     updatePlayer(state, action) {
       const players = state.value.players?.slice()
-      const existing = players.filter(p => p.id === action.payload.id)[0]
+      const existing = players.find(p => p.id === action.payload.id)
       players[players.indexOf(existing)] = action.payload
       state.value.players = players
     },

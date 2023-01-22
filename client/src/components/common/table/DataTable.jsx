@@ -4,12 +4,22 @@ import {
   Table,
   TableContainer,
   TableHead,
-  TableCell,
-  TableRow,
   TableBody,
   TableFooter,
 } from '@mui/material'
+import DataTableRow from './DataTableRow'
+import { useEffect } from 'react'
 
+// const shouldReRender = (prev, curr) => {
+//   const newData = curr.data.map(x => x.id)
+//   const allSamePlayers = prev.data.map(x => x.id).every(e => newData.includes(e))
+//   console.log("same list of players? - ", allSamePlayers)
+//   console.log("previous: ", prev.data)
+//   console.log("new data: ", curr.data)
+//   return allSamePlayers
+//   return
+// }
+// React.memo(
 export default function DataTable({
   columns,
   data,
@@ -21,34 +31,9 @@ export default function DataTable({
   isLineupTable = false
 }) {
 
-  const styles = () => {
-    return onRowSelect ? { cursor: 'cell' } : {}
-  }
-
-  const click = (row) => {
-    return onRowSelect ? onRowSelect(row) : void (0)
-  }
-
-  const rowValueInput = (column, row, isLineupTable) => {
-    if (isLineupTable) {
-      switch (column.field) {
-        case 'remove':
-        case 'roster_slot_id':
-          return row
-        case 'pts':
-          return { row: row.value, projection: useCeiling ? 'ceiling' : 'base' }
-        default:
-          return row.value
-      }
-    } else {
-      switch (column.field) {
-        case 'pts':
-          return { row: row, projection: useCeiling ? 'ceiling' : 'base' }
-        default:
-          return row
-      }
-    }
-  }
+  useEffect(() => {
+    console.log("updated data")
+  }, [data])
 
   return (
     <TableContainer sx={tableStyle} >
@@ -58,26 +43,13 @@ export default function DataTable({
         </TableHead>
         <TableBody>
           {data.map((row, i) => {
-            return (
-              <TableRow
-                hover
-                key={i}
-                sx={styles()}
-                onClick={() => click(row)}
-              >
-                {columns.map((col, i) => {
-                  return (
-                    <TableCell
-                      key={i}
-                      sx={col.cellStyle}
-                      {...col.props}
-                    >
-                      {col.valueGetter(rowValueInput(col, row, isLineupTable))}
-                    </TableCell>
-                  )
-                })}
-              </TableRow>
-            )
+            return <DataTableRow
+              row={row}
+              columns={columns}
+              onRowSelect={onRowSelect}
+              useCeiling={useCeiling}
+              isLineupTable={isLineupTable}
+            />
           })}
         </TableBody>
         <TableFooter>
@@ -87,3 +59,4 @@ export default function DataTable({
     </TableContainer>
   )
 }
+// , shouldReRender)

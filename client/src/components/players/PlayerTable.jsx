@@ -55,7 +55,7 @@ export default function PlayerTable({ columns, selectedDraftGroup, selectedDraft
           columns={columns}
           data={paginated}
           tableStyle={TABLE_STYLES}
-          onRowSelect={onPlayerSelect}
+          onRowSelect={optoTable ? onPlayerSelect : null}
           header={<PlayerTableHeader columns={columns} optoTable={optoTable} />}
           footer={<PlayerTablePagination />}
         />

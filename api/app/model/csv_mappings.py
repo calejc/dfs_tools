@@ -61,7 +61,9 @@ class Columns:
         return row.get(self.player, None)
 
     def format_rate_value(self, value):
-        if "%" in value:
+        if value is None:
+            return None
+        elif "%" in value:
             return float(value.split("%")[0])
         else:
             return float(value) * 100
