@@ -1,7 +1,8 @@
 import { capitalize } from "@mui/material"
 import { POSITIONS } from "../../../state/lineup"
+import { MIN_MAX } from "./DataTable"
 import ExcludeButton from "./ExcludeButton"
-import ExposureInput, { MIN_MAX } from "./ExposureInput"
+import ExposureInput from "./ExposureInput"
 import LockButton from "./LockButton"
 import NumberInputField from "./NumberInputField"
 import RemovePlayerButton from "./RemovePlayerButton"
@@ -71,31 +72,31 @@ export const DATA_TABLE_COLUMN = {
     'remove',
     <></>,
     false,
-    (row) => <RemovePlayerButton row={row} />
+    (row, fn) => <RemovePlayerButton row={row} removePlayer={fn} />
   ),
   MaxExposure: BASE_DATA_TABLE_COLUMN(
     'max',
     'Max',
     false,
-    (row) => <ExposureInput minMax={MIN_MAX.MAX} player={row} />
+    (row, fn) => <ExposureInput minMax={MIN_MAX.MAX} player={row} setExposure={fn} />
   ),
   MinExposure: BASE_DATA_TABLE_COLUMN(
     'min',
     'Min',
     false,
-    (row) => <ExposureInput minMax={MIN_MAX.MIN} player={row} />
+    (row, fn) => <ExposureInput minMax={MIN_MAX.MIN} player={row} setExposure={fn} />
   ),
   Exclude: BASE_DATA_TABLE_COLUMN(
     'exclude',
     <></>,
     false,
-    (row) => <ExcludeButton player={row} />
+    (row, fn) => <ExcludeButton player={row} excludePlayer={fn} />
   ),
   Lock: BASE_DATA_TABLE_COLUMN(
     'lock',
     <></>,
     false,
-    (row) => <LockButton player={row} />
+    (row, fn) => <LockButton player={row} lockPlayer={fn} />
   ),
 }
 

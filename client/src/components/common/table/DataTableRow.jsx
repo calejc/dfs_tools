@@ -2,12 +2,23 @@ import { TableCell, TableRow } from '@mui/material'
 import '../../../App.css'
 import React from 'react'
 
-export default function DataTableRow({
+const shouldReRender = (prev, next) => {
+  /*
+    Columns prop is not memoized and never has referential equality.
+    Instead of trying to memoize the DATA_TABLE_COLUMNs,
+      have opted for just checking the row data here.
+  */
+  return prev.row === next.row
+}
+
+export default React.memo(function DataTableRow({
   columns,
   row,
   onRowSelect = null,
   useCeiling = null,
-  isLineupTable = false
+  isLineupTable = false,
+  removePlayer = () => void (0),
+  setExposure = () => void (0),
 }) {
 
   const click = (row) => {
@@ -35,6 +46,20 @@ export default function DataTableRow({
     }
   }
 
+  const fn = (col) => {
+    switch (col.field) {
+      case 'remove':
+        return removePlayer
+      case 'exclude':
+      case 'lock':
+      case 'max':
+      case 'min':
+        return setExposure
+      default:
+        return () => void (0)
+    }
+  }
+
   return <TableRow
     hover
     sx={onRowSelect ? { cursor: 'cell' } : {}}
@@ -46,8 +71,9 @@ export default function DataTableRow({
         sx={col.cellStyle}
         {...col.props}
       >
-        {col.valueGetter(rowValueInput(col, row, isLineupTable))}
+        {col.valueGetter(rowValueInput(col, row, isLineupTable), fn(col))}
       </TableCell>
     })}
   </TableRow>
-}
+
+}, shouldReRender)

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import '../../../App.css'
 import {
   Table,
@@ -8,18 +8,15 @@ import {
   TableFooter,
 } from '@mui/material'
 import DataTableRow from './DataTableRow'
-import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { removeLineupPlayer } from '../../../state/lineup'
+import { updatePlayer } from '../../../state/draftGroup'
 
-// const shouldReRender = (prev, curr) => {
-//   const newData = curr.data.map(x => x.id)
-//   const allSamePlayers = prev.data.map(x => x.id).every(e => newData.includes(e))
-//   console.log("same list of players? - ", allSamePlayers)
-//   console.log("previous: ", prev.data)
-//   console.log("new data: ", curr.data)
-//   return allSamePlayers
-//   return
-// }
-// React.memo(
+export const MIN_MAX = {
+  MAX: 'max',
+  MIN: 'min'
+}
+
 export default function DataTable({
   columns,
   data,
@@ -30,10 +27,25 @@ export default function DataTable({
   useCeiling = null,
   isLineupTable = false
 }) {
+  const dispatch = useDispatch()
 
-  useEffect(() => {
-    console.log("updated data")
-  }, [data])
+  const removePlayer = useCallback((row) => {
+    dispatch(removeLineupPlayer(row.value.id))
+  }, [])
+
+  const setExposure = useCallback((e, player, minMax = null, lock = false, exclude = false) => {
+    const updated = { ...player }
+    if (minMax) {
+      updated[minMax] = e.target.value
+    } else if (lock) {
+      updated[MIN_MAX.MAX] = 100
+      updated[MIN_MAX.MIN] = 100
+    } else if (exclude) {
+      updated[MIN_MAX.MAX] = 0
+      updated[MIN_MAX.MIN] = 0
+    }
+    dispatch(updatePlayer(updated))
+  }, [])
 
   return (
     <TableContainer sx={tableStyle} >
@@ -44,11 +56,14 @@ export default function DataTable({
         <TableBody>
           {data.map((row, i) => {
             return <DataTableRow
+              key={i}
               row={row}
               columns={columns}
               onRowSelect={onRowSelect}
               useCeiling={useCeiling}
               isLineupTable={isLineupTable}
+              removePlayer={removePlayer}
+              setExposure={setExposure}
             />
           })}
         </TableBody>
@@ -59,4 +74,3 @@ export default function DataTable({
     </TableContainer>
   )
 }
-// , shouldReRender)
