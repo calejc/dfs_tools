@@ -44,7 +44,7 @@ def to_game_entity(json):
 
 
 def query_upcoming_draft_groups():
-    return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime.now()).all()
+    return db.session.query(DraftGroup).filter(DraftGroup.start >= datetime(2023, 1, 19, 0, 0, 0)).all()
 
 
 def get_entity_by_type_and_id(id, clazz):

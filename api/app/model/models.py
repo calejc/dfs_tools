@@ -174,9 +174,10 @@ class DraftGroupPlayer(db.Model):
     ceiling: float = avg_column_property(id, Projection.ceiling, 2)
     median: float = avg_column_property(id, Projection.median, 2)
     value: float = avg_column_property(id, Projection.value, 2)
-    ownership: float = avg_column_property(
-        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
-    )
+    # ownership: float = avg_column_property(
+    #     id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
+    # )
+    ownership: float = avg_column_property(id, Projection.ownership, 3)
     optimal: float = avg_column_property(id, Projection.optimal, 3)
 
     @property
@@ -222,6 +223,17 @@ class DraftGroupPlayer(db.Model):
             for team in [self._game.home_team, self._game.away_team]
             if team.dk_id != self.team_id
         ][0]
+
+    def with_projections(
+        self,
+        sources=[
+            ProjectionSource.ESTABLISH_THE_RUN,
+            ProjectionSource.RUN_THE_SIMS,
+            ProjectionSource.OTHER,
+        ],
+    ):
+        # TODO: convert dataclassw ith @property's to a custom serialize method querying stats by source
+        pass
 
 
 @dataclass(repr=False)
