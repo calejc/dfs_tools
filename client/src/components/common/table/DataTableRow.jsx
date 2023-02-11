@@ -1,5 +1,4 @@
-import { TableCell, TableRow } from '@mui/material'
-import '../../../App.css'
+import { TableRow } from '@mui/material'
 import React from 'react'
 
 const shouldReRender = (prev, next) => {
@@ -17,8 +16,6 @@ export default React.memo(function DataTableRow({
   onRowSelect = null,
   useCeiling = null,
   isLineupTable = false,
-  removePlayer = () => void (0),
-  setExposure = () => void (0),
 }) {
 
   const click = (row) => {
@@ -46,34 +43,12 @@ export default React.memo(function DataTableRow({
     }
   }
 
-  const fn = (col) => {
-    switch (col.field) {
-      case 'remove':
-        return removePlayer
-      case 'exclude':
-      case 'lock':
-      case 'max':
-      case 'min':
-        return setExposure
-      default:
-        return () => void (0)
-    }
-  }
-
   return <TableRow
     hover
     sx={onRowSelect ? { cursor: 'cell' } : {}}
     onClick={() => click(row)}
   >
-    {columns.map((col, i) => {
-      return <TableCell
-        key={i}
-        sx={col.cellStyle}
-        {...col.props}
-      >
-        {col.valueGetter(rowValueInput(col, row, isLineupTable), fn(col))}
-      </TableCell>
-    })}
+    {columns.map((col) => col.renderCellContents(rowValueInput(col, row, isLineupTable)))}
   </TableRow>
 
 }, shouldReRender)

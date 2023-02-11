@@ -1,4 +1,4 @@
-import { Checkbox, FormControlLabel, FormGroup, Tab, TableCell, TableRow, TableSortLabel, Tabs, TextField } from '@mui/material'
+import { Checkbox, FormControlLabel, FormGroup, Tab, TableCell, TableRow, Tabs, TextField } from '@mui/material'
 import React from 'react'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -107,27 +107,7 @@ export default function PlayerTableHeader({ columns, optoTable }) {
       </TableCell>
     </TableRow>
     <TableRow className='player-table-header-row'>
-      {columns.map(col => (
-        <TableCell
-          key={col.field}
-          sortDirection={(col.sortable && parameters.sortBy === col.field) ? parameters.sortDir : false}
-          sx={{ padding: '2px 6px!important', lineHeight: '16px', fontWeight: 'bold' }}
-        >
-          {col.sortable ?
-            <TableSortLabel
-              active={parameters.sortBy === col.field}
-              className={parameters.sortBy === col.field ? 'active-sort data-table-header' : 'data-table-header'}
-              direction={parameters.sortBy === col.field ? parameters.sortDir : 'desc'}
-              onClick={() => onSort(col.field)}
-            >
-              {col.label}
-            </TableSortLabel> :
-            <>
-              {col.label}
-            </>
-          }
-        </TableCell>
-      ))}
+      {columns.map(col => col.renderHeaderCell(onSort, parameters.sortBy, parameters.sortDir))}
     </TableRow>
   </>
 }

@@ -1,102 +1,82 @@
-import { capitalize } from "@mui/material"
 import { POSITIONS } from "../../../state/lineup"
 import { MIN_MAX } from "./DataTable"
+import DataTableColumn from "./DataTableColumn"
 import ExcludeButton from "./ExcludeButton"
 import ExposureInput from "./ExposureInput"
 import LockButton from "./LockButton"
 import NumberInputField from "./NumberInputField"
 import RemovePlayerButton from "./RemovePlayerButton"
 
-const BASE_STYLE = { padding: '2px 6px!important' }
-
-const BASE_DATA_TABLE_COLUMN = (
-  field,
-  label = null,
-  sortable = true,
-  customValueGetter = null,
-  cellStyle = BASE_STYLE,
-  props = {}
-) => {
-  return {
-    field: field,
-    label: label ? label : capitalize(field),
-    sortable: sortable,
-    valueGetter: customValueGetter ? customValueGetter : (row) => <span>{row[field]}</span>,
-    cellStyle: cellStyle,
-    props: props
-  }
-}
-
-export const DATA_TABLE_COLUMN = {
-  Position: BASE_DATA_TABLE_COLUMN('roster_slot_id', 'Pos', true, (row) => POSITIONS[row.roster_slot_id].label),
-  Team: BASE_DATA_TABLE_COLUMN(
+const DATA_TABLE_COLUMN = {
+  Position: new DataTableColumn('roster_slot_id', 'Pos', true, (row) => POSITIONS[row.roster_slot_id].label),
+  Team: new DataTableColumn(
     'team',
     <></>,
     false,
     (row) => <img height='15' src={row['team']['logo']}></img>,
-    BASE_STYLE,
+    null,
     { align: 'center' }
   ),
-  PlayerName: BASE_DATA_TABLE_COLUMN('player', null, false),
-  Opponent: BASE_DATA_TABLE_COLUMN(
+  PlayerName: new DataTableColumn('player', null, false),
+  Opponent: new DataTableColumn(
     'opp',
     null,
     true,
     (row) => row['opp']['abbr'],
-    BASE_STYLE,
+    null,
     { align: 'center' }
   ),
-  Salary: BASE_DATA_TABLE_COLUMN('salary'),
-  SalaryShort: BASE_DATA_TABLE_COLUMN('salary', 'Sal'),
-  Points: BASE_DATA_TABLE_COLUMN('pts', null, true, ({ row, projection }) => <span>{row[projection]}</span>),
-  BaseProjection: BASE_DATA_TABLE_COLUMN('base'),
-  MedianProjection: BASE_DATA_TABLE_COLUMN('median'),
-  CeilingProjection: BASE_DATA_TABLE_COLUMN('ceiling'),
-  Ownership: BASE_DATA_TABLE_COLUMN('ownership', 'pOwn'),
-  OptimalRate: BASE_DATA_TABLE_COLUMN('optimal'),
-  Leverage: BASE_DATA_TABLE_COLUMN(
+  Salary: new DataTableColumn('salary'),
+  SalaryShort: new DataTableColumn('salary', 'Sal'),
+  Points: new DataTableColumn('pts', null, true, ({ row, projection }) => <span>{row[projection]}</span>),
+  BaseProjection: new DataTableColumn('base'),
+  MedianProjection: new DataTableColumn('median'),
+  CeilingProjection: new DataTableColumn('ceiling'),
+  Ownership: new DataTableColumn('ownership', 'pOwn'),
+  OptimalRate: new DataTableColumn('optimal'),
+  Leverage: new DataTableColumn(
     'leverage',
     null,
     true,
     (row) => <span className={row['leverage'] > 0 ? 'green' : 'red'}>{row['leverage']}</span>
   ),
-  BoomRate: BASE_DATA_TABLE_COLUMN('boom'),
-  Exposure: BASE_DATA_TABLE_COLUMN('exposure', '%'),
-  Projection: BASE_DATA_TABLE_COLUMN(
+  BoomRate: new DataTableColumn('boom'),
+  Exposure: new DataTableColumn('exposure', '%'),
+  Projection: new DataTableColumn(
     'projected',
     'Proj',
     true,
     (row) => <NumberInputField value={row['projected']} disabled={true} onChange={() => void (0)} />
   ),
-  RemovePlayer: BASE_DATA_TABLE_COLUMN(
+  RemovePlayer: new DataTableColumn(
     'remove',
     <></>,
     false,
-    (row, fn) => <RemovePlayerButton row={row} removePlayer={fn} />
+    (row) => <RemovePlayerButton row={row} />
   ),
-  MaxExposure: BASE_DATA_TABLE_COLUMN(
+  MaxExposure: new DataTableColumn(
     'max',
     'Max',
     false,
-    (row, fn) => <ExposureInput minMax={MIN_MAX.MAX} player={row} setExposure={fn} />
+    (row) => <ExposureInput minMax={MIN_MAX.MAX} player={row} />
   ),
-  MinExposure: BASE_DATA_TABLE_COLUMN(
+  MinExposure: new DataTableColumn(
     'min',
     'Min',
     false,
-    (row, fn) => <ExposureInput minMax={MIN_MAX.MIN} player={row} setExposure={fn} />
+    (row) => <ExposureInput minMax={MIN_MAX.MIN} player={row} />
   ),
-  Exclude: BASE_DATA_TABLE_COLUMN(
+  Exclude: new DataTableColumn(
     'exclude',
     <></>,
     false,
-    (row, fn) => <ExcludeButton player={row} excludePlayer={fn} />
+    (row) => <ExcludeButton player={row} />
   ),
-  Lock: BASE_DATA_TABLE_COLUMN(
+  Lock: new DataTableColumn(
     'lock',
     <></>,
     false,
-    (row, fn) => <LockButton player={row} lockPlayer={fn} />
+    (row) => <LockButton player={row} />
   ),
 }
 

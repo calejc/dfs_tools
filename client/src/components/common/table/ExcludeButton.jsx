@@ -1,14 +1,25 @@
 import React from 'react'
 import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt'
 import { IconButton } from '@mui/material'
+import { useDispatch } from 'react-redux'
+import { updatePlayer } from '../../../state/draftGroup'
 
-export default function ExcludeButton({ player, excludePlayer = () => void (0) }) {
+export default function ExcludeButton({ player }) {
+
+  const dispatch = useDispatch()
+
+  const onClick = (player) => {
+    const updated = { ...player }
+    updated['max'] = 0
+    updated['min'] = 0
+    dispatch(updatePlayer(updated))
+  }
 
   return <IconButton
     color='error'
     size='small'
     sx={{ padding: '0px!important', fontSize: '6px!important' }}
-    onClick={(e) => excludePlayer(e, player, null, false, true)}
+    onClick={() => onClick(player)}
   >
     <DoNotDisturbAltIcon fontSize='small' />
   </IconButton>

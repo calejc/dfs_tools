@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import '../../../App.css'
 import {
   Table,
@@ -8,9 +8,6 @@ import {
   TableFooter,
 } from '@mui/material'
 import DataTableRow from './DataTableRow'
-import { useDispatch } from 'react-redux'
-import { removeLineupPlayer } from '../../../state/lineup'
-import { updatePlayer } from '../../../state/draftGroup'
 
 export const MIN_MAX = {
   MAX: 'max',
@@ -27,25 +24,6 @@ export default function DataTable({
   useCeiling = null,
   isLineupTable = false
 }) {
-  const dispatch = useDispatch()
-
-  const removePlayer = useCallback((row) => {
-    dispatch(removeLineupPlayer(row.value.id))
-  }, [])
-
-  const setExposure = useCallback((e, player, minMax = null, lock = false, exclude = false) => {
-    const updated = { ...player }
-    if (minMax) {
-      updated[minMax] = e.target.value
-    } else if (lock) {
-      updated[MIN_MAX.MAX] = 100
-      updated[MIN_MAX.MIN] = 100
-    } else if (exclude) {
-      updated[MIN_MAX.MAX] = 0
-      updated[MIN_MAX.MIN] = 0
-    }
-    dispatch(updatePlayer(updated))
-  }, [])
 
   return (
     <TableContainer sx={tableStyle} >
@@ -62,8 +40,6 @@ export default function DataTable({
               onRowSelect={onRowSelect}
               useCeiling={useCeiling}
               isLineupTable={isLineupTable}
-              removePlayer={removePlayer}
-              setExposure={setExposure}
             />
           })}
         </TableBody>

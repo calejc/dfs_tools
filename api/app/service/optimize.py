@@ -52,6 +52,7 @@ def to_lineup(model):
     flex_player = determine_flex_player(lineup)
 
     # TODO: disgusting, find a better way to get players in the correct lineup order
+    # TODO: Maybe a class method on the player object that returns a sort order?
     sorted_lineup = []
     sorted_lineup += [p for p in lineup if p.roster_slot_id == QB_ROSTER_SLOT_ID]
     sorted_lineup += [
@@ -85,22 +86,22 @@ def pos_to_roster_slots(pos):
 def base_constraints_and_objective(model, players, player_vars):
     model += lpSum([players[p]["pts"] * player_vars[p] for p in players.keys()])
     model += lpSum(player_vars.values()) == 9
-    # model += (
-    #     lpSum(
-    #         [
-    #             len(
-    #                 set(
-    #                     [
-    #                         players[p]["team"]
-    #                         for p in players.keys()
-    #                         if player_vars[p] >= 1
-    #                     ]
-    #                 )
-    #             )
-    #         ]
-    #     )
-    #     >= 3
-    # )
+    model += (
+        lpSum(
+            [
+                len(
+                    set(
+                        [
+                            players[p]["team"]
+                            for p in players.keys()
+                            if player_vars[p] >= 1
+                        ]
+                    )
+                )
+            ]
+        )
+        >= 2
+    )
 
 
 def salary_cap_constraint(model, players, player_vars):

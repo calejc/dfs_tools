@@ -60,6 +60,7 @@ draft_group_game_relational_table = db.Table(
 @dataclass
 class Projection(db.Model):
     __tablename__ = "projection"
+    __allow_unmapped__ = True
     id: int = db.Column(db.Integer, primary_key=True)
 
     source: str = db.Column(db.Enum(ProjectionSource), nullable=False)
@@ -76,6 +77,7 @@ class Projection(db.Model):
 @dataclass
 class TeamEntity(db.Model):
     __tablename__ = "team"
+    __allow_unmapped__ = True
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String, nullable=False)
     location: str = db.Column(db.String, nullable=False)
@@ -112,6 +114,7 @@ class TeamEntity(db.Model):
 @dataclass
 class PlayerEntity(db.Model):
     __tablename__ = "player"
+    __allow_unmapped__ = True
     id: int = db.Column(db.Integer, primary_key=True)
     first_name: str = db.Column(db.String, nullable=False)
     last_name: str = db.Column(db.String, nullable=False)
@@ -137,6 +140,7 @@ class PlayerEntity(db.Model):
 @dataclass
 class Game(db.Model):
     __tablename__ = "game"
+    __allow_unmapped__ = True
     id: int = db.Column(db.Integer, primary_key=True)
     home = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
     away = db.Column(db.Integer, db.ForeignKey("team.dk_id"))
@@ -148,6 +152,7 @@ class Game(db.Model):
 @dataclass
 class DraftGroupPlayer(db.Model):
     __tablename__ = "draft_group_player"
+    __allow_unmapped__ = True
     player: str
     team: str
     opp: str
@@ -232,13 +237,14 @@ class DraftGroupPlayer(db.Model):
             ProjectionSource.OTHER,
         ],
     ):
-        # TODO: convert dataclassw ith @property's to a custom serialize method querying stats by source
+        # TODO: convert dataclass with @property's to a custom serialize method querying stats by source
         pass
 
 
 @dataclass(repr=False)
 class DraftGroup(db.Model):
     __tablename__ = "draft_group"
+    __allow_unmapped__ = True
     id: int = db.Column(db.Integer, primary_key=True)
     site: str = db.Column(db.Enum(Site), nullable=False)
     type: str = db.Column(db.Enum(SlateType), nullable=False)
