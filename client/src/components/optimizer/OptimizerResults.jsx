@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux'
 import CsvDownloadButton from '../common/CsvDownloadButton'
 import OptimizerLineupTable from './table/OptimizerLineupTable'
 import OptimizerResultsExposureTable from './table/OptimizerResultsExposureTable'
+import isShowdown from '../../util/isShowdownSlate'
 
 export default function OptimizerResults() {
   const { value: lineups, exposure } = useSelector(state => state.lineups)
@@ -65,7 +66,7 @@ export default function OptimizerResults() {
             filename={filename()}
             tooltip="Download lineups"
           />
-          <OptimizerResultsExposureTable exposures={exposure} />
+          <OptimizerResultsExposureTable exposures={exposure} isShowdown={isShowdown(selectedDraftGroup)} />
         </Grid>
       </>
       }

@@ -273,6 +273,16 @@ def new_lineup_constraint(model, player_vars, constraints):
     ) <= (9 - constraints.unique)
 
 
+def to_exposure_list_item(i, ctr, players, lineups):
+    p = query_player_by_id(i)
+    return {
+        "team": {"logo": "/img/{}.png".format(players[i]["team"].lower())},
+        "player": p.player,
+        "rosterSlotId": p.roster_slot_id,
+        "exposure": round(ctr[i] / len(lineups) * 100, 2),
+    }
+
+
 def optimize(constraints: OptimizerConstraintsModel):
     players = {
         p["id"]: {
@@ -313,14 +323,7 @@ def optimize(constraints: OptimizerConstraintsModel):
     resp = {
         "lineups": lineups,
         "exposure": sorted(
-            [
-                {
-                    "team": {"logo": "/img/{}.png".format(players[i]["team"].lower())},
-                    "player": query_player_by_id(i).player,
-                    "exposure": round(ctr[i] / len(lineups) * 100, 2),
-                }
-                for i in ctr
-            ],
+            [to_exposure_list_item(i, ctr, players, lineups) for i in ctr],
             key=lambda x: x["exposure"],
             reverse=True,
         ),
