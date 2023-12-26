@@ -28,6 +28,7 @@ export default function LineupTable() {
 
   return (lineup.length > 0 && (
     <DataTable
+      playerSelector={(state, player) => player}
       columns={COLS}
       data={lineup}
       footer={<LineupTableFooter totalSalaryLeft={totalSalaryLeft()} useCeilingProjection={useCeiling} />}

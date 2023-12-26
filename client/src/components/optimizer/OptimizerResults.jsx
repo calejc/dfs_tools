@@ -22,7 +22,7 @@ export default function OptimizerResults() {
   const csvData = () => {
     const headers = ['QB', 'RB', 'RB', 'WR', 'WR', 'WR', 'TE', 'FLEX', 'DST']
     const rows = lineups.map(lineup => {
-      return lineup.map((x, i) => {
+      return Object.values(lineup).map((x, i) => {
         if (isFlexPosition(i)) {
           return x.flex_id
         } else {

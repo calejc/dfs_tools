@@ -13,3 +13,8 @@ export const SORT_DIR = {
   ASCENDING: 'asc',
   DESCENDING: 'desc'
 }
+
+export const MIN_MAX = {
+  MAX: 'max',
+  MIN: 'min'
+}

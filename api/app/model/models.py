@@ -41,6 +41,25 @@ def avg_column_property(draftable_id, col, round, single_source=None):
     )
 
 
+# def avg_property_value(draftable_id, col, round, projection_sources):
+#     filters = [
+#         draft_group_player_projection_relational_table.c.draft_group_player_id
+#         == draftable_id,
+#         draft_group_player_projection_relational_table.c.projection_id == Projection.id,
+#     ]
+#     filters.append(
+#         Projection.source.in_(projection_sources)
+#     ) if projection_sources else None
+#     x = db.session.scalars(
+#         db.select(
+#             db.func.round(
+#                 db.func.avg(col).label("{}".format(str(col).split(".")[1])), round
+#             )
+#         ).where(db.and_(*filters))
+#     ).one()
+#     return x if x is not None else 0
+
+
 draft_group_player_projection_relational_table = db.Table(
     "draft_group_player_projection",
     db.Column("draft_group_player_id", db.ForeignKey("draft_group_player.id")),
@@ -179,10 +198,10 @@ class DraftGroupPlayer(db.Model):
     ceiling: float = avg_column_property(id, Projection.ceiling, 2)
     median: float = avg_column_property(id, Projection.median, 2)
     value: float = avg_column_property(id, Projection.value, 2)
-    # ownership: float = avg_column_property(
-    #     id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
-    # )
-    ownership: float = avg_column_property(id, Projection.ownership, 3)
+    ownership: float = avg_column_property(
+        id, Projection.ownership, 3, ProjectionSource.ESTABLISH_THE_RUN
+    )
+    # ownership: float = avg_column_property(id, Projection.ownership, 3)
     optimal: float = avg_column_property(id, Projection.optimal, 3)
 
     @property
@@ -228,17 +247,6 @@ class DraftGroupPlayer(db.Model):
             for team in [self._game.home_team, self._game.away_team]
             if team.dk_id != self.team_id
         ][0]
-
-    def with_projections(
-        self,
-        sources=[
-            ProjectionSource.ESTABLISH_THE_RUN,
-            ProjectionSource.RUN_THE_SIMS,
-            ProjectionSource.OTHER,
-        ],
-    ):
-        # TODO: convert dataclass with @property's to a custom serialize method querying stats by source
-        pass
 
 
 @dataclass(repr=False)
@@ -291,6 +299,25 @@ class OptimizerStackOptions:
         self.opp = opp
 
 
+class OwnershipConstraints:
+    def __init__(self, min_players: int, max_players: int, ownership: float):
+        self.min_players = min_players
+        self.max_players = max_players
+        self.ownership = ownership
+
+
+class PlayerGroup:
+    def __init__(
+        self,
+        key_player: DraftGroupPlayer,
+        required: List[DraftGroupPlayer],
+        omit: List[DraftGroupPlayer],
+    ):
+        self.key_player = key_player
+        self.required = required
+        self.omit = omit
+
+
 class OptimizerConstraintsModel:
     def __init__(
         self,
@@ -301,6 +328,8 @@ class OptimizerConstraintsModel:
         flex: list,
         stack: OptimizerStackOptions,
         use_ceiling: bool,
+        ownership_constraints: List[OwnershipConstraints],
+        player_groups: List[PlayerGroup],
         players: List[DraftGroupPlayer],
     ):
         self.draft_group_id = draft_group_id

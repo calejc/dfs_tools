@@ -13,6 +13,7 @@ export default function ExposureInput({ minMax, player }) {
   }
 
   return <NumberInputField
+    key={`${player.id}-${minMax}`}
     value={player[minMax]}
     onChange={setExposure}
   />

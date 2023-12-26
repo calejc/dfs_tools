@@ -1,15 +1,16 @@
 from flask import jsonify, request
-from app.service.db_service import *
-from app.service.team_service import *
-from app.service.draftkings_service import *
-from app.service.stats_service import *
-from app.service.optimize import *
+from app import app
 from app.model.models import (
     OptimizerStackOption,
     OptimizerStackOptions,
     OptimizerConstraintsModel,
 )
-from app import app
+from app.service.db_service import *
+from app.service.draftkings_service import *
+from app.service.optimize import *
+from app.service.player_service import update_player_entities
+from app.service.stats_service import *
+from app.service.team_service import *
 
 
 @app.route("/teams", methods=["POST"])
@@ -25,7 +26,7 @@ def teams_get():
 
 @app.route("/players", methods=["POST"])
 def players_post():
-    insert_players()
+    update_player_entities()
     return {}
 
 
@@ -69,6 +70,8 @@ def run_optimizer():
             flex=data["flex_positions"],
             players=players,
             use_ceiling=data["useCeiling"],
+            ownership_constraints=[],
+            player_groups=[],
             stack=OptimizerStackOptions(
                 with_qb=OptimizerStackOption(
                     stack["WithQB"]["RB"],

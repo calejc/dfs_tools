@@ -6,10 +6,17 @@ import '../../App.css'
 import { SORT_DIR } from '../../shared/CONSTANTS'
 import { filter, query, showAll, sort, updatePlayerProjections, useCeiling } from '../../state/draftGroup'
 import { POSITIONS } from '../../state/lineup'
+import DataTableHeaderCell from '../common/table/DataTableHeaderCell'
 
 export default function PlayerTableHeader({ columns, optoTable }) {
+  console.log('re-rendering player table header')
   const dispatch = useDispatch()
-  const { value: selectedDraftGroup, parameters } = useSelector(state => state.draftGroup)
+  const {
+    value: {
+      type: selectedDraftGroupType
+    },
+    parameters
+  } = useSelector(state => state.draftGroup)
 
   useEffect(() => {
     dispatch(updatePlayerProjections())
@@ -41,7 +48,7 @@ export default function PlayerTableHeader({ columns, optoTable }) {
   }
 
   const draftGroupPositionalTabs = () => {
-    return Object.keys(POSITIONS).filter(k => POSITIONS[k].draftGroupType === selectedDraftGroup.type)
+    return Object.keys(POSITIONS).filter(k => POSITIONS[k].draftGroupType === selectedDraftGroupType)
   }
 
   return <>
@@ -77,7 +84,7 @@ export default function PlayerTableHeader({ columns, optoTable }) {
       <TableCell padding='none' colSpan={3} align="right">
         <FormGroup sx={{ paddingLeft: '150px' }}>
           <FormControlLabel
-            label="Hide 0 proj"
+            label="Hide < 3.0 proj"
             disableTypography
             control={
               <Checkbox
@@ -107,7 +114,9 @@ export default function PlayerTableHeader({ columns, optoTable }) {
       </TableCell>
     </TableRow>
     <TableRow className='player-table-header-row'>
-      {columns.map(col => col.renderHeaderCell(onSort, parameters.sortBy, parameters.sortDir))}
+      <DataTableHeaderCell sort={{ by: parameters.sortBy, dir: parameters.sortDir }}>
+        {columns.map(col => col.renderHeaderCell(onSort, parameters.sortBy, parameters.sortDir))}
+      </DataTableHeaderCell>
     </TableRow>
   </>
 }

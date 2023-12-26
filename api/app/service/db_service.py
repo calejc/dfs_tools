@@ -1,11 +1,12 @@
 import csv, json
+from typing import overload
 from app.model.models import *
 from app import app
 
 
 NFL_TEAMS_JSON_FP = "resources/nfl_teams.json"
 NFL_TEAMS_NFLFASTR_CSV_FP = "resources/nfl_teams.csv"
-NFL_PLAYERS_JSON_FP = "resources/all_players.json"
+NFL_PLAYERS_JSON_FP = "resources/updated_players.json"
 
 
 def is_relevant_fantasy_player(player_json):
@@ -13,47 +14,58 @@ def is_relevant_fantasy_player(player_json):
         return False
     else:
         return any(
-            pos in player_json["fantasy_positions"] for pos in ["QB", "WR", "RB", "TE"]
+            pos in player_json["fantasy_positions"]
+            for pos in ["QB", "WR", "RB", "TE", "FB"]
         )
 
 
 def insert_players():
     with open(NFL_PLAYERS_JSON_FP, "r") as f:
-        [to_player_entity(p) for k, p in json.loads(f.read()).items()]
+        [to_player_entity(p) for p in json.loads(f.read()).values()]
 
 
-def to_player_entity(player_json):
+@overload
+def to_player_entity(player_entity: PlayerEntity):
+    with app.app_context():
+        db.session.add(player_entity)
+        db.session.commit()
+
+
+@overload
+def to_player_entity(player_json: dict):
     if is_relevant_fantasy_player(player_json):
         with app.app_context():
-            player = (
-                db.session.query(PlayerEntity)
-                .filter_by(sleeper_id=player_json["player_id"])
-                .first()
-            )
-            if not player and player_json.get("team", None) is not None:
-                db.session.add(
-                    PlayerEntity(
-                        first_name=player_json["first_name"],
-                        last_name=player_json["last_name"],
-                        full_name=player_json["full_name"],
-                        team=player_json["team"],
-                        position=player_json["position"],
-                        status=player_json["status"],
-                        hashtag=player_json["hashtag"],
-                        stats_id=player_json["stats_id"],
-                        dk_id=player_json["swish_id"],
-                        swish_id=player_json["swish_id"],
-                        yahoo_id=player_json["yahoo_id"],
-                        rotowire_id=player_json["rotowire_id"],
-                        espn_id=player_json["espn_id"],
-                        gsis_id=player_json["gsis_id"],
-                        rotoworld_id=player_json["rotoworld_id"],
-                        fantasy_data_id=player_json["fantasy_data_id"],
-                        sportradar_id=player_json["sportradar_id"],
-                        sleeper_id=player_json["player_id"],
-                    )
+            if player_json.get("team", None) is not None:
+                player = (
+                    db.session.query(PlayerEntity)
+                    .filter_by(sleeper_id=player_json["player_id"])
+                    .first()
                 )
-                db.session.commit()
+                new_player_entity = PlayerEntity(
+                    first_name=player_json["first_name"],
+                    last_name=player_json["last_name"],
+                    full_name=player_json["full_name"],
+                    team=player_json["team"],
+                    position=player_json["position"],
+                    status=player_json["status"],
+                    hashtag=player_json["hashtag"],
+                    stats_id=player_json["stats_id"],
+                    dk_id=player_json["swish_id"],
+                    swish_id=player_json["swish_id"],
+                    yahoo_id=player_json["yahoo_id"],
+                    rotowire_id=player_json["rotowire_id"],
+                    espn_id=player_json["espn_id"],
+                    gsis_id=player_json["gsis_id"],
+                    rotoworld_id=player_json["rotoworld_id"],
+                    fantasy_data_id=player_json["fantasy_data_id"],
+                    sportradar_id=player_json["sportradar_id"],
+                    sleeper_id=player_json["player_id"],
+                )
+                if player:
+                    new_player_entity.id = player.id
+                db.session.merge(new_player_entity)
+                # db.session.add(new_player_entity)
+                # db.session.commit()
 
 
 def to_team_entity(team_json, team_csv_row):

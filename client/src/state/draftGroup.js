@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import getDraftGroupById from "../api/getDraftGroupById"
 import { SORT_DIR } from "../shared/CONSTANTS"
-import createDefaultReducersForAsyncThunk from "./apiBased/createDefaultReducersForAsyncThunk"
+import { asyncPendingReducer, asyncRejectedReducer } from "./apiBased/createDefaultReducersForAsyncThunk"
 import createInitialState from "./apiBased/createInitialState"
 import REQUEST_STATUS from "./apiBased/REQUEST_STATUS"
 
@@ -64,11 +64,11 @@ export const fetchDraftGroupById = createAsyncThunk(
   async (dgid) => await getDraftGroupById(dgid)
 )
 
-const sorted = (filteredData, sortBy, isDesc) => {
-  return filteredData?.slice().sort((a, b) => {
+const sorted = (playerIds, allPlayers, sortBy, isDesc) => {
+  return playerIds.sort((a, b) => {
     return isDesc ?
-      b[sortBy] - a[sortBy] :
-      a[sortBy] - b[sortBy]
+      allPlayers[b][sortBy] - allPlayers[a][sortBy] :
+      allPlayers[a][sortBy] - allPlayers[b][sortBy]
   })
 }
 
@@ -89,7 +89,7 @@ const playerForFilter = (player, currentFilter) => {
 }
 
 const hasProjection = (p, params) => {
-  return params.showAll ? true : [p.base, p.ceiling, p.ownership].some(projectedValue => projectedValue !== null && parseInt(projectedValue) !== 0)
+  return params.showAll ? true : [p.base, p.ceiling, p.ownership].some(projectedValue => projectedValue !== null && parseInt(projectedValue) >= 3)
 }
 
 
@@ -101,8 +101,9 @@ const rowsForCurrPage = (data, page, perPage) => {
 }
 
 const filtered = (allPlayers, params, lineup) => {
-  const playersInLineup = lineup.map(x => x.value.player_id).filter(pid => pid)
-  const filteredPlayers = allPlayers?.filter(p => {
+  const playersInLineup = lineup.map(x => x.value?.player_id).filter(pid => pid)
+  const filteredPlayers = Object.keys(allPlayers)?.filter(pid => {
+    const p = allPlayers[pid]
     return gameSelectionIncludesPlayer(p, params.game) &&
       playerForFilter(p, params.position) &&
       p.player.toUpperCase().includes(params.query.toString().toUpperCase()) &&
@@ -110,7 +111,7 @@ const filtered = (allPlayers, params, lineup) => {
       !playersInLineup?.includes(p.player_id)
   })
 
-  return sorted(filteredPlayers, params.sortBy, params.sortDir === SORT_DIR.DESCENDING)
+  return sorted(filteredPlayers, allPlayers, params.sortBy, params.sortDir === SORT_DIR.DESCENDING)
 }
 
 const draftGroupSlice = createSlice({
@@ -172,7 +173,7 @@ const draftGroupSlice = createSlice({
       state.parameters = initialParameters()
     },
     setFiltered(state, action) {
-      const filteredAndSorted = filtered(state.value.players?.slice(), state.parameters, action.payload)
+      const filteredAndSorted = filtered({ ...state.value.players }, state.parameters, action.payload)
       state.filtered = filteredAndSorted
       state.paginated = rowsForCurrPage(filteredAndSorted, state.parameters.page, state.parameters.perPage)
     },
@@ -186,15 +187,16 @@ const draftGroupSlice = createSlice({
       // TODO: might help with performance to only update the `projected` value for filtered (currently shown players on page).
       // TODO: after those are updated, continue with rest. this way, user's page isn't bogged down while updating entire player pool
       const projKey = state.parameters.useCeiling ? 'ceiling' : 'base'
-      const players = state.value.players?.slice()
-      players?.map(p => p.projected = p[projKey])
+      const players = { ...state.value.players }
+      Object.entries(players)?.map(e => { e[1].projected = e[1][projKey] })
       state.value.players = players
     },
     updatePlayer(state, action) {
-      const players = state.value.players?.slice()
-      const existing = players.find(p => p.id === action.payload.id)
-      players[players.indexOf(existing)] = action.payload
-      state.value.players = players
+      state.value.players[action.payload.id] = action.payload
+
+      const filteredAndSorted = sorted(state.filtered, state.value.players, state.parameters.sortBy, state.parameters.sortDir === SORT_DIR.DESCENDING)
+      state.filtered = filteredAndSorted
+      state.paginated = rowsForCurrPage(filteredAndSorted, state.parameters.page, state.parameters.perPage)
     },
     clearDraftGroup(state) {
       state.value = {}
@@ -203,7 +205,20 @@ const draftGroupSlice = createSlice({
       state.status = REQUEST_STATUS.NOT_STARTED
     }
   },
-  extraReducers: createDefaultReducersForAsyncThunk(fetchDraftGroupById)
+  extraReducers: {
+    [fetchDraftGroupById.pending]: asyncPendingReducer,
+    [fetchDraftGroupById.rejected]: asyncRejectedReducer,
+    [fetchDraftGroupById.fulfilled]: (state, action) => {
+      state.status = REQUEST_STATUS.SUCCEEDED
+      state.value = {
+        ...action.payload,
+        players: action.payload.players.reduce((a, v) => {
+          return { ...a, [v.id]: v }
+        }, {})
+      }
+    }
+  }
+
 })
 
 export const query = (query) => draftGroupSlice.actions.query(query)

@@ -71,7 +71,7 @@ export const optimizeLineups = createAsyncThunk(
     {
       ...getState().lineups.settings,
       useCeiling: getState().draftGroup.parameters.useCeiling,
-      players: getState().draftGroup.value.players
+      players: Object.values(getState().draftGroup.value.players)
     }
   )
 )
@@ -82,8 +82,12 @@ const reducers = {
   },
   [optimizeLineups.fulfilled]: (state, action) => {
     state.status = REQUEST_STATUS.SUCCEEDED
-    state.value = action.payload.lineups
     state.exposure = action.payload.exposure
+    state.value = action.payload.lineups.map(lu => {
+      return lu.reduce((a, v) => {
+        return { ...a, [v.id]: v }
+      }, {})
+    })
   },
   [optimizeLineups.rejected]: (state, action) => {
     asyncRejectedReducer(state, action)

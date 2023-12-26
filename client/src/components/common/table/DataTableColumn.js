@@ -4,8 +4,9 @@ import '../../../App.css'
 const BASE_STYLE = { padding: '2px 6px!important' }
 
 class DataTableColumn {
-  constructor(field, label = null, sortable = true, renderCell = null, cellStyle = null, props = {}) {
+  constructor(field, value = null, label = null, sortable = true, renderCell = null, cellStyle = null, props = {}) {
     this.field = field
+    this.value = value ? value : (row) => row[field]
     this.label = label ? label : capitalize(field)
     this.sortable = sortable
     this.renderCell = renderCell ? renderCell : (row) => <span>{row[field]}</span>

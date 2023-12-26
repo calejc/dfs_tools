@@ -1,22 +1,22 @@
 import { TableRow } from '@mui/material'
 import React from 'react'
+import DataTableCell from './DataTableCell'
+import { useSelector } from 'react-redux'
 
-const shouldReRender = (prev, next) => {
-  /*
-    Columns prop is not memoized and never has referential equality.
-    Instead of trying to memoize the DATA_TABLE_COLUMNs,
-      have opted for just checking the row data here.
-  */
-  return prev.row === next.row
-}
+const propsAreEqual = (prev, next) => prev.playerId === next.playerId
 
 export default React.memo(function DataTableRow({
   columns,
-  row,
+  playerSelector,
+  playerId,
   onRowSelect = null,
   useCeiling = null,
   isLineupTable = false,
 }) {
+
+  const row = useSelector(state => playerSelector(state, playerId))
+
+  console.log('re-rendering datatable row', row)
 
   const click = (row) => {
     return onRowSelect ? onRowSelect(row) : void (0)
@@ -48,7 +48,13 @@ export default React.memo(function DataTableRow({
     sx={onRowSelect ? { cursor: 'cell' } : {}}
     onClick={() => click(row)}
   >
-    {columns.map((col) => col.renderCellContents(rowValueInput(col, row, isLineupTable)))}
+    {columns.map((col) => {
+      const rowValue = rowValueInput(col, row, isLineupTable)
+      return <DataTableCell key={`${rowValue.id}-${col.field}`} value={col.value(rowValue)}>
+        {col.renderCellContents(rowValue)}
+      </DataTableCell>
+    }
+    )}
   </TableRow>
 
-}, shouldReRender)
+}, propsAreEqual)

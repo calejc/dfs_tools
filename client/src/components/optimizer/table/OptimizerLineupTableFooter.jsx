@@ -12,15 +12,15 @@ export default function OptimizerLineupTableFooter({ lineup, useCeiling }) {
     // TODO: this is disgusting
     setTotalLineupProjection(
       parseFloat(
-        lineup.reduce((accum, player) => accum + (useCeiling ? player.ceiling : player.base), 0)
+        Object.values(lineup).reduce((accum, player) => accum + (useCeiling ? player.ceiling : player.base), 0)
       ).toFixed(2)
     )
     setTotalLineupOwnership(
       parseFloat(
-        lineup.reduce((accum, player) => accum + (Number(player.ownership) || 0), 0)
+        Object.values(lineup).reduce((accum, player) => accum + (Number(player.ownership) || 0), 0)
       ).toFixed(2)
     )
-    const populatedValues = lineup.filter(p => p.ownership > 0)
+    const populatedValues = Object.values(lineup).filter(p => p.ownership > 0)
     if (populatedValues.length > 0) {
       setLineupProductOwnership(
         parseFloat(parseFloat(

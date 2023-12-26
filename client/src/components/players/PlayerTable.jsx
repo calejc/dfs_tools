@@ -13,9 +13,9 @@ import { useCallback } from 'react'
 
 const TABLE_STYLES = { border: '1px solid rgba(224, 224, 224, 1)', borderRadius: '5px' }
 
-export default function PlayerTable({ columns, selectedDraftGroup, selectedDraftGroupId, optoTable = false }) {
+export default function PlayerTable({ columns, optoTable = false }) {
   const dispatch = useDispatch()
-  const { status, parameters, paginated } = useSelector(state => state.draftGroup)
+  const { status, parameters, paginated, value: { id: selectedDraftGroupId } } = useSelector(state => state.draftGroup)
   const { isLoading, loading, done } = useLoading()
   const lineup = useSelector(state => state.lineup.value)
 
@@ -28,7 +28,7 @@ export default function PlayerTable({ columns, selectedDraftGroup, selectedDraft
   }, [status])
 
   useEffect(() => {
-    if (selectedDraftGroup) {
+    if (selectedDraftGroupId) {
       dispatch(setFiltered(lineup))
     }
   }, [parameters, lineup])
@@ -51,8 +51,9 @@ export default function PlayerTable({ columns, selectedDraftGroup, selectedDraft
   return (
     <>
       <LoadingBox isLoading={isLoading} />
-      {(!isLoading && Object.keys(selectedDraftGroup).length > 0) && (
+      {(!isLoading && selectedDraftGroupId) && (
         <DataTable
+          playerSelector={(state, playerId) => state.draftGroup.value.players[playerId]}
           columns={columns}
           data={paginated}
           tableStyle={TABLE_STYLES}

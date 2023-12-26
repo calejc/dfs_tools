@@ -8,7 +8,7 @@ import SubHeader from './SubHeader'
 
 export default function GameSelect() {
   const [selectedGame, setSelectedGame] = useState()
-  const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
+  const { value: { games: selectedDraftGroupGames } } = useSelector(state => state.draftGroup)
   const dispatch = useDispatch()
 
   const onSelect = (id) => {
@@ -44,7 +44,7 @@ export default function GameSelect() {
           },
         }}
       >
-        {selectedDraftGroup?.games?.map(g => {
+        {selectedDraftGroupGames?.map(g => {
           return <Tab
             onClick={() => onSelect(g.id)}
             value={g.id}

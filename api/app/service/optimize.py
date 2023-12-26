@@ -1,4 +1,4 @@
-from pulp import LpMaximize, LpProblem, lpSum, LpVariable
+from pulp import LpMaximize, LpProblem, lpSum, LpVariable, PULP_CBC_CMD
 from collections import Counter
 from app.model.models import *
 from app.model.draftkings_api_constants import (
@@ -7,6 +7,7 @@ from app.model.draftkings_api_constants import (
     WR_ROSTER_SLOT_ID,
     TE_ROSTER_SLOT_ID,
     DST_ROSTER_SLOT_ID,
+    FLEX_ROSTER_SLOT_ID
 )
 
 
@@ -51,23 +52,28 @@ def to_lineup(model):
     lineup = [query_player(p) for p in model.variables() if p.varValue > 0]
     flex_player = determine_flex_player(lineup)
 
+    sorted_lineup = [p for p in lineup if p != flex_player]
+    sorted_lineup.sort(key=lambda x: x.roster_slot_id)
+    sorted_lineup[7:7] = [flex_player]
+    return sorted_lineup
+
     # TODO: disgusting, find a better way to get players in the correct lineup order
     # TODO: Maybe a class method on the player object that returns a sort order?
-    sorted_lineup = []
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == QB_ROSTER_SLOT_ID]
-    sorted_lineup += [
-        p for p in lineup if p.roster_slot_id == RB_ROSTER_SLOT_ID and p != flex_player
-    ]
-    sorted_lineup += [
-        p for p in lineup if p.roster_slot_id == WR_ROSTER_SLOT_ID and p != flex_player
-    ]
-    sorted_lineup += [
-        p for p in lineup if p.roster_slot_id == TE_ROSTER_SLOT_ID and p != flex_player
-    ]
-    sorted_lineup += [flex_player]
-    sorted_lineup += [p for p in lineup if p.roster_slot_id == DST_ROSTER_SLOT_ID]
+    # sorted_lineup = []
+    # sorted_lineup += [p for p in lineup if p.roster_slot_id == QB_ROSTER_SLOT_ID]
+    # sorted_lineup += [
+    #     p for p in lineup if p.roster_slot_id == RB_ROSTER_SLOT_ID and p != flex_player
+    # ]
+    # sorted_lineup += [
+    #     p for p in lineup if p.roster_slot_id == WR_ROSTER_SLOT_ID and p != flex_player
+    # ]
+    # sorted_lineup += [
+    #     p for p in lineup if p.roster_slot_id == TE_ROSTER_SLOT_ID and p != flex_player
+    # ]
+    # sorted_lineup += [flex_player]
+    # sorted_lineup += [p for p in lineup if p.roster_slot_id == DST_ROSTER_SLOT_ID]
 
-    return sorted_lineup
+    # return sorted_lineup
 
 
 def pos_to_roster_slots(pos):
@@ -228,30 +234,28 @@ def stacking_constraints(model, players, player_vars, constraints):
 
 
 def max_per_team_constraints(model, players, player_vars, constraints):
-    # FIXME: this should be updated to account for stack options.
-    # Example: Stack set to 3 with QB, 2 bringbacks, and max_per_team set to 1. <- this should be solveable
-    for rbwrte in [
-        p
-        for p in players
-        if players[p]["pos"]
-        in (RB_ROSTER_SLOT_ID, WR_ROSTER_SLOT_ID, TE_ROSTER_SLOT_ID)
-    ]:
-        qb_for_team = sorted(
-            [
-                p
-                for p, player_data in players.items()
-                if player_data["team"] == players[rbwrte]["team"]
-                and player_data["pos"] == QB_ROSTER_SLOT_ID
-            ],
-            key=lambda x: players[x]["pts"],
-        )[0]
+    qb_for_team = [
+        players[p]
+        for p in players.keys()
+        if player_vars[p] >= 1 and players[p]["pos"] == QB_ROSTER_SLOT_ID
+    ][0]
+    stack_teams = [qb_for_team["team"]]
+    if constraints.stack.opp.stacking():
+        stack_teams.append(qb_for_team["opp"])
+    for team in set(
+        [
+            players[p]["team"]
+            for p in players.keys()
+            if player_vars[p] >= 1 and players[p]["team"] not in stack_teams
+        ]
+    ):
         model += (
             lpSum(
-                player_vars[i]
-                for i, data in players.items()
-                if data["team"] == players[rbwrte]["team"]
-                and i != qb_for_team
-                and data["pos"] != DST_ROSTER_SLOT_ID
+                [
+                    player_vars[p]
+                    for p, player_data in players.items()
+                    if player_data["team"] == team
+                ]
             )
             <= constraints.max_per_team
         )
@@ -263,14 +267,23 @@ def player_specific_constraints(model, players, player_vars):
             model += lpSum([player_vars[id]]) >= 1
 
 
-def new_lineup_constraint(model, player_vars, constraints):
-    # TODO: also ensure player selections are within exposure constraints
-    # Will not duplicate this result for additional solutions
-    model += lpSum(
+def new_lineup_constraint(model, player_vars, players, ctr, constraints):
+    players_in_lineup = [
         player_vars[int(p.name.split("_")[1])]
         for p in model.variables()
         if p.varValue > 0
-    ) <= (9 - constraints.unique)
+    ]
+
+    # Once player has hit their max count based on max exposure constraint,
+    # Set a model constraint so that the player will not appear in any more lineups
+    for p in players_in_lineup:
+        pid = int(p.name.split("_")[1])
+        if ctr[pid] >= players[pid]["max_count"]:
+            model += lpSum([p]) == 0
+
+    # Add a constraint to the model with the players of this new lineup,
+    # effectively making sure any additional lineups generated after will not duplicate this one.
+    model += lpSum(players_in_lineup) <= (9 - constraints.unique)
 
 
 def to_exposure_list_item(i, ctr, players, lineups):
@@ -283,6 +296,14 @@ def to_exposure_list_item(i, ctr, players, lineups):
     }
 
 
+def to_exposure_range(i, ctr):
+    pass
+
+
+def max_count(max_pct, total_count):
+    return int((max_pct / 100) * total_count)
+
+
 def optimize(constraints: OptimizerConstraintsModel):
     players = {
         p["id"]: {
@@ -290,13 +311,15 @@ def optimize(constraints: OptimizerConstraintsModel):
             "pts": p["projected"],
             "pos": p["roster_slot_id"],
             "team": p["team"]["abbr"],
+            "game_id": p,
             "opp": p["opp"]["abbr"],
             "own": p["ownership"],
-            "min": p["min"],
-            "max": p["max"],
+            "min": int(p["min"]),
+            "max": int(p["max"]),
+            "max_count": max_count(int(p["max"]), constraints.count),
         }
         for p in constraints.players
-        if p["projected"] is not None and p["max"] > 0
+        if p["projected"] is not None and int(p["max"]) > 0
     }
     player_vars = LpVariable.dicts("player", players.keys(), cat="Binary")
     model = LpProblem(name="optimize", sense=LpMaximize)
@@ -311,15 +334,15 @@ def optimize(constraints: OptimizerConstraintsModel):
         stacking_constraints(model, players, player_vars, constraints)
 
     lineups = []
-    for _ in range(constraints.count):
-        model.solve()
-        new_lineup_constraint(model, player_vars, constraints)
-        lineups.append(to_lineup(model))
-
     ctr = Counter()
-    for lu in lineups:
-        for p in lu:
+    for _ in range(constraints.count):
+        model.solve(PULP_CBC_CMD(msg=0))
+        new_lineup = to_lineup(model)
+        for p in new_lineup:
             ctr[p.id] += 1
+        lineups.append(new_lineup)
+        new_lineup_constraint(model, player_vars, players, ctr, constraints)
+
     resp = {
         "lineups": lineups,
         "exposure": sorted(

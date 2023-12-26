@@ -9,17 +9,13 @@ import {
 } from '@mui/material'
 import DataTableRow from './DataTableRow'
 
-export const MIN_MAX = {
-  MAX: 'max',
-  MIN: 'min'
-}
-
 export default function DataTable({
   columns,
   data,
   header,
   footer,
   tableStyle,
+  playerSelector,
   onRowSelect = null,
   useCeiling = null,
   isLineupTable = false
@@ -32,10 +28,11 @@ export default function DataTable({
           {header}
         </TableHead>
         <TableBody>
-          {data.map((row, i) => {
+          {data.map((playerId, i) => {
             return <DataTableRow
               key={i}
-              row={row}
+              playerSelector={playerSelector}
+              playerId={playerId}
               columns={columns}
               onRowSelect={onRowSelect}
               useCeiling={useCeiling}

@@ -51,7 +51,7 @@ export default function OptimizerResultsExposureTable({ exposures, isShowdown = 
         <Grid xs={12} container item>
           <FormControl>
             <Select
-              sx={{width: '200px!important'}}
+              sx={{ width: '200px!important' }}
               multiple
               variant='standard'
               size='small'
@@ -76,6 +76,7 @@ export default function OptimizerResultsExposureTable({ exposures, isShowdown = 
       </Grid>
     </Toolbar>
     <DataTable
+      playerSelector={(state, player) => player}
       columns={COLS}
       data={filtered()}
       header={header()}

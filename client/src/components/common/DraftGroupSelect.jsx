@@ -13,13 +13,13 @@ import LoadingBox from './LoadingBox'
 export default function DraftGroupSelect() {
   const [selectedDraftGroupId, setSelectedDraftGroupId] = useState()
   const { value: draftGroups, status } = useSelector(state => state.draftGroups)
-  const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
+  const { value: { type: selectedDraftGroupType } } = useSelector(state => state.draftGroup)
   const { isLoading, loading, done } = useLoading()
   const dispatch = useDispatch()
 
   useEffect(() => {
-    dispatch(setLineupShell(selectedDraftGroup?.type))
-  }, [selectedDraftGroup])
+    dispatch(setLineupShell(selectedDraftGroupType))
+  }, [selectedDraftGroupType])
 
   const onSelect = (e, id) => {
     setSelectedDraftGroupId(id)

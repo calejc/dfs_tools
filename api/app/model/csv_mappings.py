@@ -156,7 +156,7 @@ class EstablishTheRunColumns(Columns):
             "DK Value",
             None,
             None,
-            ["DK Ownership", "Total Own"],
+            ["DK Ownership", "Total Own", "DK Small Ownership"],
             "CPT Own",
             None,
             None,

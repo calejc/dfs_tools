@@ -14,10 +14,11 @@ export default function OptimizerLineupTable({ lineup, useCeiling }) {
     DATA_TABLE_COLUMN.Ownership,
   ]
 
-  return (lineup.length > 0 && (
+  return (Object.keys(lineup).length > 0 && (
     <DataTable
+      playerSelector={(state, playerId) => lineup[playerId]}
       columns={COLS}
-      data={lineup}
+      data={Object.keys(lineup)}
       footer={<OptimizerLineupTableFooter lineup={lineup} useCeiling={useCeiling} />}
       header={<TableRow><TableCell colSpan={6}></TableCell></TableRow>}
       tableStyle={{ maxWidth: '400px' }}

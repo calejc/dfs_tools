@@ -12,18 +12,35 @@ import { optimizeLineups } from '../../state/lineups'
 import REQUEST_STATUS from '../../state/apiBased/REQUEST_STATUS'
 import OptimizerResults from './OptimizerResults'
 import GameSelect from '../common/GameSelect'
-import isShowdown from '../../util/isShowdownSlate'
 import LoadingBox from '../common/LoadingBox'
 
+const TabContent = ({ status, columns, tab }) => {
+  if (status === REQUEST_STATUS.IN_PROGRESS) {
+    return <LoadingBox isLoading={true} />
+  } else {
+    switch (tab) {
+      case 0:
+        return <PlayerTable
+          columns={columns}
+          optoTable={true}
+        />
+      case 1:
+        return <OptimizerSettings />
+      case 2:
+        return <OptimizerResults />
+    }
+  }
+}
+
 export default function Optimizer() {
-  const { value: selectedDraftGroup } = useSelector(state => state.draftGroup)
+  const { value: { type: selectedDraftGroupType, id: selectedDraftGroupId } } = useSelector(state => state.draftGroup)
   const status = useSelector(state => state.lineups.status)
   const dispatch = useDispatch()
   const [tab, setTab] = useState(0)
 
   useEffect(() => {
     setTab(0)
-  }, [selectedDraftGroup])
+  }, [selectedDraftGroupId])
 
   useEffect(() => {
     dispatch(clearDraftGroup())
@@ -50,25 +67,6 @@ export default function Optimizer() {
     DATA_TABLE_COLUMN.Lock
   ]
 
-  const tabContent = () => {
-    if (status === REQUEST_STATUS.IN_PROGRESS) {
-      return <LoadingBox isLoading={true} />
-    } else {
-      switch (tab) {
-        case 0:
-          return <PlayerTable
-            columns={COLUMNS}
-            optoTable={true}
-            selectedDraftGroup={selectedDraftGroup}
-          />
-        case 1:
-          return <OptimizerSettings />
-        case 2:
-          return <OptimizerResults />
-      }
-    }
-  }
-
   const showResultsTab = () => {
     return status !== REQUEST_STATUS.NOT_STARTED
   }
@@ -78,7 +76,7 @@ export default function Optimizer() {
       <Grid item xs={12}>
         <DraftGroupSelect />
       </Grid>
-      {(selectedDraftGroup.id && !isShowdown(selectedDraftGroup)) && <Grid item xs={12}>
+      {(selectedDraftGroupId && selectedDraftGroupType !== 'showdown') && <Grid item xs={12}>
         <GameSelect />
       </Grid>}
       <Grid item xs={12} container>
@@ -101,13 +99,13 @@ export default function Optimizer() {
             <Button
               variant='outlined'
               onClick={onRun}
-              disabled={!selectedDraftGroup.id}
+              disabled={!selectedDraftGroupId}
             >
               Run
             </Button>
           </Grid>
         </Grid>
-        {tabContent()}
+        <TabContent status={status} columns={COLUMNS} tab={tab} />
       </Grid>
     </Grid>
   )
